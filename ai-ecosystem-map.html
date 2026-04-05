@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 生态体系全景图 v2</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', 'Microsoft YaHei', sans-serif; background: #0a0a0f; color: #e2e8f0; overflow-x: hidden; }
+.hero { position: relative; min-height: 45vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 3rem 1rem; }
+.hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.15) 0%, transparent 60%); pointer-events: none; }
+.hero h1 { font-size: 2.8rem; font-weight: 800; background: linear-gradient(135deg, #818cf8, #c084fc, #f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 1rem; position: relative; z-index: 1; }
+.hero p { font-size: 1.1rem; color: #94a3b8; max-width: 650px; position: relative; z-index: 1; line-height: 1.7; }
+.legend { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem 1rem; }
+.legend-grid { display: flex; flex-wrap: wrap; gap: 0.8rem; justify-content: center; }
+.legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; color: #94a3b8; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+.layer { position: relative; max-width: 1200px; margin: 0 auto; padding: 1.5rem 1.5rem 0.5rem; overflow: visible; }
+.layer-header { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1rem; cursor: pointer; user-select: none; }
+.layer-number { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.1rem; flex-shrink: 0; color: white; }
+.layer-title { font-size: 1.4rem; font-weight: 700; }
+.layer-subtitle { font-size: 0.8rem; color: #64748b; margin-left: 0.4rem; }
+.layer-toggle { margin-left: auto; transition: transform 0.3s; font-size: 1.4rem; color: #475569; }
+.layer-toggle.collapsed { transform: rotate(-90deg); }
+.layer-content { transition: max-height 0.5s ease, opacity 0.4s ease; }
+.layer-content.collapsed { overflow: hidden; }
+.layer-content.collapsed { max-height: 0 !important; opacity: 0; }
+
+/* IO flow strip */
+.io-strip { display: flex; align-items: center; gap: 0.8rem; padding: 0.8rem 1.2rem; border-radius: 12px; margin-bottom: 1rem; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); }
+.io-strip .io-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.15rem 0.5rem; border-radius: 4px; }
+.io-strip .io-input .io-label { background: rgba(34,197,94,0.15); color: #4ade80; }
+.io-strip .io-output .io-label { background: rgba(251,191,36,0.15); color: #fbbf24; }
+.io-strip .io-arrow { color: #475569; font-size: 1rem; }
+.io-strip .io-text { font-size: 0.82rem; color: #c8d0e0; }
+.io-strip .io-essence { font-size: 0.78rem; color: #94a3b8; font-style: italic; margin-left: 0.5rem; }
+
+.concept-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.8rem; overflow: visible; }
+.concept-card { background: rgba(30,30,50,0.6); border: 1px solid rgba(99,102,241,0.12); border-radius: 14px; padding: 1.2rem; transition: all 0.3s ease; cursor: pointer; position: relative; }
+.concept-card:hover { border-color: rgba(99,102,241,0.35); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(99,102,241,0.1); }
+.concept-card.active { border-color: rgba(99,102,241,0.6); background: rgba(99,102,241,0.08); }
+.concept-card .icon { font-size: 1.6rem; margin-bottom: 0.5rem; }
+.concept-card h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.3rem; }
+.concept-card .tag { font-size: 0.65rem; padding: 0.12rem 0.4rem; border-radius: 999px; display: inline-block; margin-bottom: 0.4rem; }
+.concept-card p { font-size: 0.78rem; color: #94a3b8; line-height: 1.5; }
+
+/* Click popup card - centered overlay */
+#clickPopupOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9998; opacity: 0; pointer-events: none; transition: opacity 0.25s ease; backdrop-filter: blur(4px); }
+#clickPopupOverlay.visible { opacity: 1; pointer-events: auto; }
+#clickPopup { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(0.92); width: 520px; max-width: calc(100vw - 2rem); max-height: calc(100vh - 3rem); overflow-y: auto; background: rgba(15,15,30,0.98); border: 1px solid rgba(99,102,241,0.25); border-radius: 20px; padding: 1.8rem 2rem; backdrop-filter: blur(24px); box-shadow: 0 24px 80px rgba(0,0,0,0.6), 0 0 60px rgba(99,102,241,0.08); z-index: 9999; opacity: 0; pointer-events: none; transition: opacity 0.25s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+#clickPopup.visible { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
+#clickPopup .popup-close { position: absolute; top: 1rem; right: 1rem; width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #94a3b8; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1rem; transition: all 0.2s; }
+#clickPopup .popup-close:hover { background: rgba(255,255,255,0.1); color: white; }
+#clickPopup .popup-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 0.3rem; }
+#clickPopup .popup-tag { font-size: 0.68rem; padding: 0.15rem 0.5rem; border-radius: 999px; display: inline-block; margin-bottom: 1rem; }
+#clickPopup .popup-section { margin-bottom: 0.8rem; }
+#clickPopup .tt-section { margin-bottom: 0.8rem; }
+#clickPopup .popup-section h5, #clickPopup .tt-section h5 { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 0.25rem; color: #94a3b8; }
+#clickPopup .popup-section p, #clickPopup .tt-section p { font-size: 0.85rem; color: #c8d0e0; line-height: 1.75; }
+#clickPopup .popup-section ul, #clickPopup .tt-section ul { padding-left: 1rem; }
+#clickPopup .popup-section li, #clickPopup .tt-section li { font-size: 0.85rem; color: #c8d0e0; line-height: 1.75; margin-bottom: 0.15rem; }
+#clickPopup .popup-section code, #clickPopup .tt-section code { background: rgba(255,255,255,0.06); padding: 0.1rem 0.3rem; border-radius: 4px; font-size: 0.78rem; color: #e879f9; }
+#clickPopup .popup-section pre, #clickPopup .tt-section pre { background: rgba(0,0,0,0.3); padding: 0.6rem 0.8rem; border-radius: 8px; overflow-x: auto; margin: 0.4rem 0; font-size: 0.75rem; line-height: 1.6; color: #a5b4fc; }
+#clickPopup .popup-more-btn { display: block; width: 100%; margin-top: 1rem; padding: 0.7rem; border-radius: 12px; background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.2); color: #a5b4fc; font-size: 0.82rem; font-weight: 500; cursor: pointer; text-align: center; transition: all 0.2s; }
+#clickPopup .popup-more-btn:hover { background: rgba(99,102,241,0.2); border-color: rgba(99,102,241,0.35); }
+#clickPopup::-webkit-scrollbar { width: 4px; }
+#clickPopup::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.3); border-radius: 2px; }
+
+.detail-panel { position: fixed; right: -540px; top: 0; width: 520px; height: 100vh; background: rgba(15,15,30,0.97); border-left: 1px solid rgba(99,102,241,0.2); backdrop-filter: blur(20px); z-index: 100; transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1); overflow-y: auto; padding: 2rem; }
+.detail-panel.open { right: 0; }
+.detail-panel .close-btn { position: absolute; top: 1rem; right: 1rem; width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #94a3b8; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: all 0.2s; }
+.detail-panel .close-btn:hover { background: rgba(255,255,255,0.1); color: white; }
+.detail-panel h2 { font-size: 1.4rem; font-weight: 700; margin: 1rem 0 0.5rem; }
+.detail-panel .detail-tag { font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 999px; display: inline-block; margin-bottom: 1rem; }
+.detail-section { margin-bottom: 1.5rem; }
+.detail-section h4 { font-size: 0.82rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.5rem; }
+.detail-section p, .detail-section li { font-size: 0.85rem; color: #c8d0e0; line-height: 1.8; }
+.detail-section ul { padding-left: 1.2rem; }
+.detail-section li { margin-bottom: 0.25rem; }
+
+.layer-1 .layer-number { background: linear-gradient(135deg, #059669, #10b981); }
+.layer-1 .tag, .layer-1 .detail-tag { background: rgba(16,185,129,0.15); color: #34d399; }
+.layer-1 .detail-section h4 { color: #34d399; }
+
+.layer-2 .layer-number { background: linear-gradient(135deg, #2563eb, #3b82f6); }
+.layer-2 .tag, .layer-2 .detail-tag { background: rgba(59,130,246,0.15); color: #60a5fa; }
+.layer-2 .detail-section h4 { color: #60a5fa; }
+
+.layer-3 .layer-number { background: linear-gradient(135deg, #7c3aed, #8b5cf6); }
+.layer-3 .tag, .layer-3 .detail-tag { background: rgba(139,92,246,0.15); color: #a78bfa; }
+.layer-3 .detail-section h4 { color: #a78bfa; }
+
+.layer-4 .layer-number { background: linear-gradient(135deg, #db2777, #ec4899); }
+.layer-4 .tag, .layer-4 .detail-tag { background: rgba(236,72,153,0.15); color: #f472b6; }
+.layer-4 .detail-section h4 { color: #f472b6; }
+
+.layer-5 .layer-number { background: linear-gradient(135deg, #9333ea, #a855f7); }
+.layer-5 .tag, .layer-5 .detail-tag { background: rgba(168,85,247,0.15); color: #c084fc; }
+.layer-5 .detail-section h4 { color: #c084fc; }
+
+.layer-6 .layer-number { background: linear-gradient(135deg, #c026d3, #d946ef); }
+.layer-6 .tag, .layer-6 .detail-tag { background: rgba(217,70,239,0.15); color: #e879f9; }
+.layer-6 .detail-section h4 { color: #e879f9; }
+
+.layer-7 .layer-number { background: linear-gradient(135deg, #e11d48, #f43f5e); }
+.layer-7 .tag, .layer-7 .detail-tag { background: rgba(244,63,94,0.15); color: #fb7185; }
+.layer-7 .detail-section h4 { color: #fb7185; }
+
+.layer-8 .layer-number { background: linear-gradient(135deg, #ea580c, #f97316); }
+.layer-8 .tag, .layer-8 .detail-tag { background: rgba(249,115,22,0.15); color: #fb923c; }
+.layer-8 .detail-section h4 { color: #fb923c; }
+
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+.overlay.open { opacity: 1; pointer-events: auto; }
+
+.flow-arrow { position: relative; text-align: center; padding: 0.3rem 0; color: rgba(99,102,241,0.4); font-size: 1rem; }
+@keyframes flowDown { 0%,100% { opacity: 0.3; } 50% { opacity: 0.7; } }
+.flow-arrow span { animation: flowDown 2s ease-in-out infinite; display: inline-block; }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.3); border-radius: 3px; }
+
+@media (max-width: 640px) {
+  .hero h1 { font-size: 1.8rem; }
+  .detail-panel { width: 100%; right: -100%; }
+  .concept-grid { grid-template-columns: 1fr; }
+  .layer-title { font-size: 1.2rem; }
+  .io-strip { flex-wrap: wrap; }
+}
+</style>
+</head>
+<body>
+
+<section class="hero">
+  <h1>🧠 AI 生态体系全景图</h1>
+  <p>8 层架构 · 从算力芯片到终端应用</p>
+</section>
+
+<div class="legend">
+  <div class="legend-grid">
+    <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div>L1 基础设施</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div>L2 数据</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#8b5cf6"></div>L3 模型</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#ec4899"></div>L4 模型优化</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#a855f7"></div>L5 能力增强</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#d946ef"></div>L6 智能体</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f43f5e"></div>L7 应用</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f97316"></div>L8 开发工具</div>
+  </div>
+</div>
+
+<!-- ===== Layer 1: 基础设施层 ===== -->
+<section class="layer layer-1">
+  <div class="layer-header" onclick="toggleLayer(this)">
+    <div class="layer-number">1</div>
+    <div><div class="layer-title">🏗️ 基础设施层 <span class="layer-subtitle">Infrastructure · 算力 / 存储 / 网络</span></div></div>
+    <div class="layer-toggle">▾</div>
+  </div>
+  <div class="layer-content" style="max-height:2000px;">
+    <div class="io-strip">
+      <div class="io-input"><span class="io-label">输入</span><span class="io-text">电力、资金、物理硬件</span></div>
+      <span class="io-arrow">→</span>
+      <div class="io-output"><span class="io-label">输出</span><span class="io-text">GPU/TPU 算力集群、存储空间、网络带宽</span></div>
+      <span class="io-essence">本质：将物理资源转化为可调度的计算资源</span>
+    </div>
+    <div class="concept-grid" id="grid-1">
+      <div class="concept-card" onclick="showDetail('gpu')"><div class="icon">🖥️</div><span class="tag">硬件</span><h3>GPU 算力</h3><p>AI 训练和推理的核心并行计算硬件</p></div>
+      <div class="concept-card" onclick="showDetail('tpu')"><div class="icon">⚡</div><span class="tag">专用芯片</span><h3>TPU / NPU</h3><p>Google TPU、华为昇腾等 AI 专用芯片</p></div>
+      <div class="concept-card" onclick="showDetail('cloud')"><div class="icon">☁️</div><span class="tag">云服务</span><h3>云计算平台</h3><p>AWS/GCP/Azure/腾讯云等弹性算力</p></div>
+      <div class="concept-card" onclick="showDetail('network')"><div class="icon">🌐</div><span class="tag">网络</span><h3>高速网络互联</h3><p>InfiniBand/RDMA 等 GPU 集群通信技术</p></div>
+      <div class="concept-card" onclick="showDetail('storage')"><div class="icon">💾</div><span class="tag">存储</span><h3>分布式存储</h3><p>海量训练数据和模型参数的存储系统</p></div>
+      <div class="concept-card" onclick="showDetail('energy')"><div class="icon">🔋</div><span class="tag">能源</span><h3>能源与散热</h3><p>大规模训练的电力消耗与液冷方案</p></div>
+    </div>
+  </div>
+</section>
+<div class="flow-arrow"><span>▼</span></div>
+
+<!-- ===== Layer 2: 数据层 ===== -->
+<section class="layer layer-2">
+  <div class="layer-header" onclick="toggleLayer(this)">
+    <div class="layer-number">2</div>
+    <div><div class="layer-title">📊 数据层 <span class="layer-subtitle">Data · 数据工程 / 标注 / 合成</span></div></div>
+    <div class="layer-toggle">▾</div>
+  </div>
+  <div class="layer-content" style="max-height:2000px;">
+    <div class="io-strip">
+      <div class="io-input"><span class="io-label">输入</span><span class="io-text">原始网页、书籍、代码、图像等非结构化数据</span></div>
+      <span class="io-arrow">→</span>
+      <div class="io-output"><span class="io-label">输出</span><span class="io-text">清洗后的高质量训练数据集、标注数据</span></div>
+      <span class="io-essence">本质：将原始信息转化为模型可学习的数字信号</span>
+    </div>
+    <div class="concept-grid" id="grid-2">
+      <div class="concept-card" onclick="showDetail('data_source')"><div class="icon">🌊</div><span class="tag">数据源</span><h3>训练数据源</h3><p>Common Crawl、Wikipedia、GitHub 等海量语料</p></div>
+      <div class="concept-card" onclick="showDetail('data_eng')"><div class="icon">🔧</div><span class="tag">工程</span><h3>数据工程</h3><p>数据清洗、去重、分词、质量过滤</p></div>
+      <div class="concept-card" onclick="showDetail('tokenization')"><div class="icon">🔤</div><span class="tag">分词</span><h3>分词与编码</h3><p>Tokenizer 将文字转换为模型可处理的数字序列</p></div>
+      <div class="concept-card" onclick="showDetail('annotation')"><div class="icon">🏷️</div><span class="tag">标注</span><h3>数据标注</h3><p>人工/半自动标注构建高质量问答对和偏好数据</p></div>
+      <div class="concept-card" onclick="showDetail('synthetic')"><div class="icon">🤖</div><span class="tag">合成</span><h3>合成数据</h3><p>用 AI 生成训练数据，解决特定领域数据匮乏问题</p></div>
+      <div class="concept-card" onclick="showDetail('data_quality')"><div class="icon">✅</div><span class="tag">质量</span><h3>数据质量与合规</h3><p>数据版权、隐私保护、偏见检测与治理</p></div>
+    </div>
+  </div>
+</section>
+<div class="flow-arrow"><span>▼</span></div>
+
+<!-- ===== Layer 3: 模型层 ===== -->
+<section class="layer layer-3">
+  <div class="layer-header" onclick="toggleLayer(this)">
+    <div class="layer-number">3</div>
+    <div><div class="layer-title">🧠 模型层 <span class="layer-subtitle">Foundation Models · LLM / 多模态 / 架构</span></div></div>
+    <div class="layer-toggle">▾</div>
+  </div>
+  <div class="layer-content" style="max-height:2000px;">
+    <div class="io-strip">
+      <div class="io-input"><span class="io-label">输入</span><span class="io-text">GPU 算力 + 训练数据集 + 架构设计</span></div>
+      <span class="io-arrow">→</span>
+      <div class="io-output"><span class="io-label">输出</span><span class="io-text">基础大模型（Base Model），具备通用语言/视觉能力</span></div>
+      <span class="io-essence">本质：在海量数据上通过数学优化拟合世界知识的概率分布</span>
+    </div>
+    <div class="concept-grid" id="grid-3">
+      <div class="concept-card" onclick="showDetail('transformer')"><div class="icon">⚙️</div><span class="tag">架构</span><h3>Transformer 架构</h3><p>自注意力机制——当前所有大模型的底层架构</p></div>
+      <div class="concept-card" onclick="showDetail('attention')"><div class="icon">🔍</div><span class="tag">机制</span><h3>注意力机制</h3><p>Self-Attention 让模型理解词与词之间的关系</p></div>
+      <div class="concept-card" onclick="showDetail('pretrain')"><div class="icon">🏋️</div><span class="tag">训练</span><h3>预训练 Pre-training</h3><p>在万亿 token 上"预测下一个词"习得世界知识</p></div>
+      <div class="concept-card" onclick="showDetail('llm')"><div class="icon">💬</div><span class="tag">模型</span><h3>大语言模型 LLM</h3><p>GPT-4、Claude、GLM-4、Qwen 等对话与生成模型</p></div>
+      <div class="concept-card" onclick="showDetail('multimodal')"><div class="icon">🎨</div><span class="tag">多模态</span><h3>多模态模型</h3><p>GPT-4o、Gemini 等理解文字/图片/音频/视频</p></div>
+      <div class="concept-card" onclick="showDetail('parameter')"><div class="icon">📐</div><span class="tag">原理</span><h3>参数与推理</h3><p>模型参数量、推理过程、上下文窗口原理</p></div>
+      <div class="concept-card" onclick="showDetail('diffusion')"><div class="icon">🖼️</div><span class="tag">生成</span><h3>扩散模型 Diffusion</h3><p>Stable Diffusion、DALL·E 等图像生成模型架构</p></div>
+      <div class="concept-card" onclick="showDetail('opensource')"><div class="icon">🔓</div><span class="tag">生态</span><h3>开源 vs 闭源</h3><p>Llama、Qwen（开源） vs GPT-4、Claude（闭源 API）</p></div>
+    </div>
+  </div>
+</section>
+<div class="flow-arrow"><span>▼</span></div>
+
+<!-- ===== Layer 4: 模型优化层 ===== -->
+<section class="layer layer-4">
+  <div class="layer-header" onclick="toggleLayer(this)">
+    <div class="layer-number">4</div>
+    <div><div class="layer-title">🧪 模型优化层 <span class="layer-subtitle">Model Optimization · 微调 / 对齐 / 蒸馏</span></div></div>
+    <div class="layer-toggle">▾</div>
+  </div>
+  <div class="layer-content" style="max-height:2000px;">
+    <div class="io-strip">
+      <div class="io-input"><span class="io-label">输入</span><span class="io-text">基础大模型 + 特定任务/领域数据 + 人类反馈</span></div>
+      <span class="io-arrow">→</span>
+      <div class="io-output"><span class="io-label">输出</span><span class="io-text">对齐模型（Chat Model）或领域专精模型</span></div>
+      <span class="io-essence">本质：将通用能力"塑形"为安全、有用、符合预期的特定能力</span>
+    </div>
+    <div class="concept-grid" id="grid-4">
+      <div class="concept-card" onclick="showDetail('sft')"><div class="icon">📝</div><span class="tag">微调</span><h3>监督微调 SFT</h3><p>用高质量问答对让模型学会对话格式</p></div>
+      <div class="concept-card" onclick="showDetail('rlhf')"><div class="icon">🎯</div><span class="tag">对齐</span><h3>RLHF 人类反馈对齐</h3><p>用人类偏好反馈训练模型变得安全有用</p></div>
+      <div class="concept-card" onclick="showDetail('dpo')"><div class="icon">⚖️</div><span class="tag">对齐</span><h3>DPO 直接偏好优化</h3><p>RLHF 的简化替代，直接用偏好数据训练</p></div>
+      <div class="concept-card" onclick="showDetail('lora')"><div class="icon">🎹</div><span class="tag">高效微调</span><h3>LoRA / QLoRA</h3><p>低成本微调——只训练 <1% 参数适配特定领域</p></div>
+      <div class="concept-card" onclick="showDetail('distill')"><div class="icon">📦</div><span class="tag">蒸馏</span><h3>知识蒸馏</h3><p>将大模型能力"压缩"到小模型，降低部署成本</p></div>
+      <div class="concept-card" onclick="showDetail('quantization')"><div class="icon">🔢</div><span class="tag">压缩</span><h3>量化 Quantization</h3><p>降低模型精度（FP16→INT4）以减少内存和加速推理</p></div>
+    </div>
+  </div>
+</section>
+<div class="flow-arrow"><span>▼</span></div>
+
+<!-- ===== Layer 5: 能力增强层 ===== -->
+<section class="layer layer-5">
+  <div class="layer-header" onclick="toggleLayer(this)">
+    <div class="layer-number">5</div>
+    <div><div class="layer-title">🔧 能力增强层 <span class="layer-subtitle">Capability Enhancement · RAG / Tool / Memory</span></div></div>
+    <div class="layer-toggle">▾</div>
+  </div>
+  <div class="layer-content" style="max-height:2000px;">
+    <div class="io-strip">
+      <div class="io-input"><span class="io-label">输入</span><span class="io-text">对齐模型 + 外部知识库 / 工具 API / 用户提示词</span></div>
+      <span class="io-arrow">→</span>
+      <div class="io-output"><span class="io-label">输出</span><span class="io-text">增强后的回答（基于真实数据、可调用工具）</span></div>
+      <span class="io-essence">本质：突破模型自身边界——注入外部知识、工具和记忆</span>
+    </div>
+    <div class="concept-grid" id="grid-5">
+      <div class="concept-card" onclick="showDetail('rag')"><div class="icon">📚</div><span class="tag">检索增强</span><h3>RAG 检索增强生成</h3><p>让模型参考外部知识库回答，减少幻觉</p></div>
+      <div class="concept-card" onclick="showDetail('embedding')"><div class="icon">🔢</div><span class="tag">向量</span><h3>Embedding 向量化</h3><p>把文字转成数字向量，衡量语义相似度</p></div>
+      <div class="concept-card" onclick="showDetail('vectordb')"><div class="icon">🗃️</div><span class="tag">数据库</span><h3>向量数据库</h3><p>Milvus、Pinecone 等存储检索向量的专用数据库</p></div>
+      <div class="concept-card" onclick="showDetail('prompt')"><div class="icon">✍️</div><span class="tag">交互</span><h3>Prompt 工程</h3><p>精心设计提示词引导模型输出</p></div>
+      <div class="concept-card" onclick="showDetail('context')"><div class="icon">📋</div><span class="tag">上下文</span><h3>长上下文 & 记忆</h3><p>让模型一次处理更多信息并记住对话历史</p></div>
+      <div class="concept-card" onclick="showDetail('multimodal_tool')"><div class="icon">👁️</div><span class="tag">感知</span><h3>视觉 & 语音模型</h3><p>图像生成(Midjourney)、语音识别(Whisper)</p></div>
+    </div>
+  </div>
+</section>
+<div class="flow-arrow"><span>▼</span></div>
+
+<!-- ===== Layer 6: 智能体层 ===== -->
+<section class="layer layer-6">
+  <div class="layer-header" onclick="toggleLayer(this)">
+    <div class="layer-number">6</div>
+    <div><div class="layer-title">🤖 智能体层 <span class="layer-subtitle">AI Agents · Agent / Workflow / Multi-Agent</span></div></div>
+    <div class="layer-toggle">▾</div>
+  </div>
+  <div class="layer-content" style="max-height:2000px;">
+    <div class="io-strip">
+      <div class="io-input"><span class="io-label">输入</span><span class="io-text">用户目标/任务描述 + 增强模型 + 工具集</span></div>
+      <span class="io-arrow">→</span>
+      <div class="io-output"><span class="io-label">输出</span><span class="io-text">自主执行的任务结果（文件、操作、决策）</span></div>
+      <span class="io-essence">本质：从"回答问题"到"完成任务"——AI 获得行动力</span>
+    </div>
+    <div class="concept-grid" id="grid-6">
+      <div class="concept-card" onclick="showDetail('agent')"><div class="icon">🤖</div><span class="tag">核心</span><h3>AI Agent 智能体</h3><p>能自主感知、思考、规划并执行任务的 AI 系统</p></div>
+      <div class="concept-card" onclick="showDetail('reasoning')"><div class="icon">🧠</div><span class="tag">推理</span><h3>推理与规划</h3><p>CoT 思维链、ToT 思维树、ReAct 等推理方法</p></div>
+      <div class="concept-card" onclick="showDetail('tool_use')"><div class="icon">🔧</div><span class="tag">工具</span><h3>Function Calling 工具调用</h3><p>让模型调用搜索、API、数据库等外部工具</p></div>
+      <div class="concept-card" onclick="showDetail('mcp')"><div class="icon">🔌</div><span class="tag">协议</span><h3>MCP 协议</h3><p>Model Context Protocol，AI 连接外部工具的统一标准</p></div>
+      <div class="concept-card" onclick="showDetail('memory_sys')"><div class="icon">💾</div><span class="tag">记忆</span><h3>Agent 记忆系统</h3><p>短期记忆 + 长期记忆让 Agent 积累经验</p></div>
+      <div class="concept-card" onclick="showDetail('multiagent')"><div class="icon">👥</div><span class="tag">协作</span><h3>多 Agent 协作</h3><p>多个智能体分工合作完成复杂任务</p></div>
+      <div class="concept-card" onclick="showDetail('workflow')"><div class="icon">🔄</div><span class="tag">编排</span><h3>工作流编排</h3><p>Dify、Coze 等可视化编排 Agent 工作流程</p></div>
+      <div class="concept-card" onclick="showDetail('agent_framework')"><div class="icon">📦</div><span class="tag">框架</span><h3>Agent 开发框架</h3><p>LangChain、OpenClaw、CrewAI 等构建 Agent 的基础框架</p></div>
+      <div class="concept-card" onclick="showDetail('agent_platform')"><div class="icon">🏢</div><span class="tag">平台与工具</span><h3>AI Agent 平台与工具</h3><p>AutoClaw、CoPaw、LobsterAI、KimiClaw、OpenClaw 等各厂商智能体产品</p></div>
+    </div>
+  </div>
+</section>
+<div class="flow-arrow"><span>▼</span></div>
+
+<!-- ===== Layer 7: 应用层 ===== -->
+<section class="layer layer-7">
+  <div class="layer-header" onclick="toggleLayer(this)">
+    <div class="layer-number">7</div>
+    <div><div class="layer-title">📱 应用层 <span class="layer-subtitle">Applications · Chat / Copilot / AIGC / 行业AI</span></div></div>
+    <div class="layer-toggle">▾</div>
+  </div>
+  <div class="layer-content" style="max-height:2000px;">
+    <div class="io-strip">
+      <div class="io-input"><span class="io-label">输入</span><span class="io-text">Agent 系统 + 用户界面 / 业务场景</span></div>
+      <span class="io-arrow">→</span>
+      <div class="io-output"><span class="io-label">输出</span><span class="io-text">面向终端用户的产品和服务</span></div>
+      <span class="io-essence">本质：将 AI 能力封装为普通人可用的产品体验</span>
+    </div>
+    <div class="concept-grid" id="grid-7">
+      <div class="concept-card" onclick="showDetail('chatbot')"><div class="icon">💬</div><span class="tag">对话</span><h3>AI 对话助手</h3><p>ChatGPT、Kimi、豆包等面向用户的对话产品</p></div>
+      <div class="concept-card" onclick="showDetail('aigc')"><div class="icon">🎨</div><span class="tag">创作</span><h3>AIGC 内容生成</h3><p>AI 写作、绘画、视频、音乐创作</p></div>
+      <div class="concept-card" onclick="showDetail('copilot')"><div class="icon">👨‍💻</div><span class="tag">编程</span><h3>AI 编程助手</h3><p>Cursor、GitHub Copilot 等代码辅助工具</p></div>
+      <div class="concept-card" onclick="showDetail('search')"><div class="icon">🔍</div><span class="tag">搜索</span><h3>AI 搜索</h3><p>Perplexity、秘塔AI搜索等智能搜索引擎</p></div>
+      <div class="concept-card" onclick="showDetail('robot')"><div class="icon">🦾</div><span class="tag">具身</span><h3>具身智能</h3><p>AI + 机器人，让 AI 与物理世界互动</p></div>
+      <div class="concept-card" onclick="showDetail('vertical')"><div class="icon">🏥</div><span class="tag">行业</span><h3>行业 AI 应用</h3><p>医疗AI、金融AI、法律AI等垂直场景</p></div>
+    </div>
+  </div>
+</section>
+<div class="flow-arrow"><span>▼</span></div>
+
+<!-- ===== Layer 8: 开发与工程层 ===== -->
+<section class="layer layer-8">
+  <div class="layer-header" onclick="toggleLayer(this)">
+    <div class="layer-number">8</div>
+    <div><div class="layer-title">🛠️ 开发与工程层 <span class="layer-subtitle">Developer Tools · SDK / 框架 / 平台</span></div></div>
+    <div class="layer-toggle">▾</div>
+  </div>
+  <div class="layer-content" style="max-height:2000px;">
+    <div class="io-strip">
+      <div class="io-input"><span class="io-label">输入</span><span class="io-text">开发者需求 + 各层 AI 能力</span></div>
+      <span class="io-arrow">→</span>
+      <div class="io-output"><span class="io-label">输出</span><span class="io-text">可复用的开发工具链——降低 AI 应用开发门槛</span></div>
+      <span class="io-essence">本质：将 AI 能力标准化、模块化，让开发者"搭积木"而非"从零造轮子"</span>
+    </div>
+    <div class="concept-grid" id="grid-8">
+      <div class="concept-card" onclick="showDetail('framework')"><div class="icon">📦</div><span class="tag">框架</span><h3>Agent 开发框架</h3><p>LangChain、OpenClaw、CrewAI 等构建 Agent 的基础框架</p></div>
+      <div class="concept-card" onclick="showDetail('api')"><div class="icon">🔌</div><span class="tag">接口</span><h3>模型 API</h3><p>OpenAI API、Anthropic API 等大模型调用接口</p></div>
+      <div class="concept-card" onclick="showDetail('lowcode')"><div class="icon">🎨</div><span class="tag">低代码</span><h3>低代码平台</h3><p>Coze、Dify、GPTs 零代码搭建 AI 应用</p></div>
+      <div class="concept-card" onclick="showDetail('mlops')"><div class="icon">🔄</div><span class="tag">运维</span><h3>MLOps 平台</h3><p>模型训练、部署、监控的一体化运维</p></div>
+      <div class="concept-card" onclick="showDetail('local_deploy')"><div class="icon">💻</div><span class="tag">部署</span><h3>本地部署</h3><p>Ollama、vLLM 在本地运行大模型</p></div>
+      <div class="concept-card" onclick="showDetail('eval')"><div class="icon">📊</div><span class="tag">评测</span><h3>评测基准</h3><p>MMLU、HumanEval 等衡量模型能力的标准测试</p></div>
+    </div>
+  </div>
+</section>
+
+<div style="height:4rem;"></div>
+
+<div class="overlay" id="overlay" onclick="closeDetail()"></div>
+<div class="detail-panel" id="detailPanel">
+  <button class="close-btn" onclick="closeDetail()">✕</button>
+  <div id="detailContent"></div>
+</div>
+
+<!-- Click popup card -->
+<div id="clickPopupOverlay"></div>
+<div id="clickPopup"><button class="popup-close" onclick="closePopup()">✕</button><div id="popupContent"></div></div>
+
+
+<script>
+function toggleLayer(h) {
+  const c = h.nextElementSibling, t = h.querySelector('.layer-toggle');
+  c.classList.toggle('collapsed'); t.classList.toggle('collapsed');
+}
+
+// MD detailed content for each concept
+const mdContent = {
+  gpu: `<div class="tt-section"><h5>📖 是什么</h5><p>GPU（Graphics Processing Unit）原本为游戏设计的图形处理器，因擅长并行计算（同时做大量简单运算）成为 AI 训练核心硬件。英伟达（NVIDIA）占据 80%+ 市场份额，H100 约 800 亿晶体管，单卡售价 $3-4 万。</p></div><div class="tt-section"><h5>💡 关键数据</h5><ul><li>训练 GPT-4 需约 <strong>2.5 万张 H100 × 90 天</strong></li><li>算力垄断使英伟达市值突破 3 万亿</li><li>H100 拥有约 800 亿晶体管</li></ul></div><div class="tt-section"><h5>🎯 类比</h5><p>GPU = 一万人同时各读一本书（并行）；CPU = 一个天才一次读一本（串行）</p></div>`,
+  tpu: `<div class="tt-section"><h5>📖 是什么</h5><p><strong>TPU</strong>（Tensor Processing Unit）：Google 自研，专为 TensorFlow 和自家模型优化。<br><strong>NPU</strong>（Neural Processing Unit）：华为昇腾 910B、苹果 Neural Engine，面向终端设备。</p></div><div class="tt-section"><h5>💡 特点</h5><ul><li>比 GPU 更专一更省电</li><li>但生态不如 GPU 丰富</li><li>Google TPU v5p 训练 Gemini</li><li>苹果 Neural Engine 让 iPhone 本地运行 AI</li></ul></div><div class="tt-section"><h5>🎯 类比</h5><p>GPU = 瑞士军刀（什么都能干），TPU/NPU = 专用手术刀（只干一件事但干得极好）</p></div>`,
+  cloud: `<div class="tt-section"><h5>📖 是什么</h5><p>按需租用 GPU/TPU 集群、海量存储和网络资源，开发者无需自建机房，按使用量付费。</p></div><div class="tt-section"><h5>💡 主流平台</h5><ul><li><strong>AWS</strong> SageMaker — 全球最大</li><li><strong>Google Cloud</strong> AI Platform — TPU 独家</li><li><strong>Azure</strong> AI — 与 OpenAI 合作</li><li><strong>腾讯云</strong> TI / <strong>阿里云</strong> PAI — 国内合规</li></ul></div><div class="tt-section"><h5>🎯 类比</h5><p>就像你不需要自建发电站，插上电网就能用电。云计算 = "AI 的国家电网"</p></div>`,
+  network: `<div class="tt-section"><h5>📖 是什么</h5><p>数千张 GPU 一起训练时需要超高速数据交换。InfiniBand 带宽达 400Gbps，延迟降至微秒级。GPU 之间要不断同步梯度参数，网络瓶颈会拖慢整个集群。</p></div><div class="tt-section"><h5>💡 关键技术</h5><ul><li>InfiniBand：400Gbps 带宽，微秒级延迟</li><li>英伟达 NVLink + NVSwitch 连接技术</li><li>以太网方案也在快速追赶</li></ul></div><div class="tt-section"><h5>🎯 类比</h5><p>几千张 GPU 协作 = 交响乐团演奏，高速网络 = 让所有乐手同频的指挥系统</p></div>`,
+  storage: `<div class="tt-section"><h5>📖 是什么</h5><p>训练数据（TB-PB级）和模型参数（数百GB）需要高性能分布式存储系统，支持高吞吐并发读写。</p></div><div class="tt-section"><h5>💡 方案</h5><ul><li>HDFS、Lustre、GPFS — 并行文件系统</li><li>S3/OSS/COS — 对象存储（数据归档）</li></ul></div><div class="tt-section"><h5>⚠️ 核心挑战</h5><p>存储 I/O 跟不上 GPU 速度 → GPU 空转等待</p></div><div class="tt-section"><h5>🎯 类比</h5><p>存储系统就像"超级图书馆"——GPU 这群"超级学霸"要同时来借书，图书馆得扛得住</p></div>`,
+  energy: `<div class="tt-section"><h5>📖 是什么</h5><p>大规模 AI 训练功耗惊人。一个 10 万卡集群功率超 100 兆瓦，相当于一个小城镇用电量。</p></div><div class="tt-section"><h5>💡 关键数据</h5><ul><li>xAI Colossus 10万 GPU 集群功率 <strong>100MW+</strong></li><li>微软考虑核能供电数据中心</li><li>液冷（浸没式冷却）成为主流散热方案</li></ul></div><div class="tt-section"><h5>🎯 类比</h5><p>AI 训练 = 永远在跑全力的马拉松运动员，需要不停地"喂饭"（供电）和"降温"（散热）</p></div>`,
+  data_source: `<div class="tt-section"><h5>📖 是什么</h5><p>大模型的学习材料来源：互联网网页、书籍、代码、论文、对话记录等。GPT-4 训练数据估计超 13 万亿 token。</p></div><div class="tt-section"><h5>💡 主要来源</h5><ul><li><strong>Common Crawl</strong> — 万亿级互联网网页快照</li><li><strong>Wikipedia</strong> — 6400万+ 词条</li><li><strong>GitHub</strong> — 千亿行代码</li><li><strong>ArXiv</strong> — 240万+ 学术论文</li><li>书籍、Reddit、YouTube 字幕等</li></ul></div><div class="tt-section"><h5>🎯 类比</h5><p>数据 = AI 的"教材"。读 100 本书 vs 读 1000 万本书，"见识"完全不同</p></div>`,
+  data_eng: `<div class="tt-section"><h5>📖 是什么</h5><p>原始数据不能直接用——需要经过：去重（删除重复内容）、清洗（去除垃圾/有害内容）、过滤（按质量阈值筛选）、格式化（统一格式）。</p></div><div class="tt-section"><h5>💡 处理步骤</h5><ul><li><strong>去重</strong>：MinHash 等算法删除重复/近似重复内容</li><li><strong>清洗</strong>：去除广告、乱码、恶意内容</li><li><strong>过滤</strong>：按困惑度（perplexity）筛选高质量文档</li><li><strong>格式化</strong>：统一编码、分句、去特殊字符</li></ul></div><div class="tt-section"><h5>⚠️ 关键事实</h5><p>数据工程占 AI 开发 <strong>60-80%</strong> 的时间</p></div><div class="tt-section"><h5>🎯 类比</h5><p>数据工程就像"编辑整理书稿"——去掉错别字、删除重复章节、过滤低质量内容，只留精华给学生</p></div>`,
+  tokenization: `<div class="tt-section"><h5>📖 是什么</h5><p>模型不认识文字，只认识数字。Tokenizer 把文本切成 token（词/字/子词），再映射成整数 ID。"Hello world" 可能变成 [15496, 995]。</p></div><div class="tt-section"><h5>💡 关键知识</h5><ul><li>主流方法：BPE（Byte Pair Encoding）、WordPiece、SentencePiece</li><li>中文"人工智能"可能是 ["人工","智能"]（2 token）或 ["人","工","智","能"]（4 token）</li><li>关系到：计费（按 token）、上下文长度限制、多语言效果</li></ul></div><div class="tt-section"><h5>🎯 类比</h5><p>Tokenizer = 翻译官，把人类文字翻译成模型能理解的"数字密码"，就像把中文翻译成摩尔斯电码</p></div>`,
+  annotation: `<div class="tt-section"><h5>📖 是什么</h5><p>人工创建高质量的训练样本：(1) <strong>SFT 标注</strong>——写问答对；(2) <strong>偏好标注</strong>——对模型回答排序/打分（用于 RLHF）。</p></div><div class="tt-section"><h5>💡 关键事实</h5><ul><li>Scale AI 是最大的数据标注平台</li><li>OpenAI 据说雇了上千名 PhD 级标注员</li><li>标注数据质量直接决定微调和对齐效果</li></ul></div><div class="tt-section"><h5>🎯 类比</h5><p>预训练数据 = 互联网（自学成才），标注数据 = 名师辅导（精心编写教材和答案）</p></div>`,
+  synthetic: `<div class="tt-section"><h5>📖 是什么</h5><p>用 AI 生成训练数据：(1) 强模型生成弱模型的训练数据（蒸馏）；(2) 用模型自我生成数据进行自我改进；(3) 生成特定场景的模拟数据。</p></div><div class="tt-section"><h5>💡 为什么重要</h5><ul><li>医疗、法律等真实数据稀缺且敏感</li><li>合成数据低成本、大规模补充训练数据</li><li>Phi 系列模型大量使用 GPT-4 生成的合成数据</li></ul></div><div class="tt-section"><h5>🎯 类比</h5><p>合成数据 = 用"学霸的笔记"教"新生"。学霸（强模型）整理出学习资料，新生（弱模型）照着学</p></div>`,
+  data_quality: `<div class="tt-section"><h5>📖 是什么</h5><p>数据版权（训练数据是否有合法授权）、隐私保护（个人数据脱敏）、偏见检测（数据是否有歧视）、数据治理（建立数据质量标准）。</p></div><div class="tt-section"><h5>💡 合规挑战</h5><ul><li><strong>版权</strong>：NYT 诉 OpenAI、欧盟 AI Act</li><li><strong>隐私</strong>：GDPR、个人信息脱敏</li><li><strong>偏见</strong>：数据中性别/种族歧视的检测和缓解</li></ul></div><div class="tt-section"><h5>🎯 类比</h5><p>数据合规就像"食品安全"——食材来源要合法、加工过程要卫生、成品要检测有害物质</p></div>`,
+  transformer: `<div class="tt-section"><h5>📖 是什么</h5><p>2017 年 Google 提出的神经网络架构。核心是 <strong>Self-Attention 自注意力机制</strong>——让模型处理每个词时都能"看到"上下文所有其他词的关系。由编码器和解码器组成。</p></div><div class="tt-section"><h5>💡 为什么赢了</h5><ul><li>① 并行计算（同时处理所有词）</li><li>② 长距离依赖（能关联远处的词）</li><li>③ 可扩展性（模型可以做得很大）</li></ul></div><div class="tt-section"><h5>💡 架构变体</h5><ul><li>GPT = Decoder-only</li><li>BERT = Encoder-only</li><li>T5 = Encoder-Decoder</li></ul></div><div class="tt-section"><h5>🎯 类比</h5><p>之前模型 = 逐字阅读（看一个忘前面），Transformer = 一目十行（写每个字都同时参考全文）</p></div>`,
+  attention: `<div class="tt-section"><h5>📖 计算原理</h5><p>对每个 token，计算它与序列中所有其他 token 的"相关性分数"，然后加权求和得到该 token 的新表示。通过 <strong>Q（查询）K（键）V（值）</strong> 三个矩阵实现。</p></div><div class="tt-section"><h5>💡 示例</h5><p>"猫坐在垫子上，<strong>因为<em>它</em></strong>很累" → 注意力机制让模型处理"它"时自动关注"猫"，理解指代关系。</p></div><div class="tt-section"><h5>💡 扩展</h5><ul><li><strong>多头注意力</strong>（Multi-Head）让模型同时关注不同类型的关系</li><li><strong>位置编码</strong>（Positional Encoding）注入词的位置信息</li></ul></div><div class="tt-section"><h5>🎯 类比</h5><p>注意力 = 开会时"知道该听谁说话"。模型处理"它"时，注意力机制告诉它："重点听'猫'说的，别管'垫子'"</p></div>`,
+  pretrain: `<div class="tt-section"><h5>📖 是什么</h5><p>在大规模无标注文本上进行的自监督训练。核心任务："给定前文，预测下一个词"。模型通过数万亿次预测不断调整参数，最终学到了语言规律和世界知识。</p></div><div class="tt-section"><h5>💡 训练规模</h5><pre>GPT-4：2.5万 H100 × 90天 ≈ $1亿，15万亿 token
+Llama 3 405B：1.6万 H100 × 30天
+输出：一个"什么都知道但不会好好说话"的基础模型</pre></div><div class="tt-section"><h5>💡 核心原理</h5><ul><li>通过极大极小优化（minimize cross-entropy loss）</li><li>让模型参数收敛到能准确预测下一个 token 的状态</li><li><strong>涌现能力</strong>（Emergent Abilities）：模型大到一定程度，突然具备之前没有的能力</li></ul></div><div class="tt-section"><h5>🎯 类比</h5><p>预训练 = 通识教育。读完互联网所有书 → 什么都知道一点但不会"和人说话"</p></div>`,
+  llm: `<div class="tt-section"><h5>📖 是什么</h5><p>Large Language Model——通过预训练获得语言理解和生成能力的大型神经网络。能对话、写作、翻译、写代码、推理。</p></div><div class="tt-section"><h5>💡 主要模型</h5><ul><li><strong>闭源</strong>：GPT-4o（OpenAI）、Claude 3.5（Anthropic）、Gemini（Google）</li><li><strong>开源</strong>：Llama 3（Meta）、Qwen2.5（阿里）、GLM-4（智谱）、DeepSeek</li></ul></div><div class="tt-section"><h5>💡 核心定律</h5><p><strong>规模法则（Scaling Law）</strong>：数据量 × 参数量 → 能力几乎线性增长</p></div><div class="tt-section"><h5>🎯 类比</h5><p>LLM = 一个"读了全人类书籍"的超级学霸。你问什么都能基于学过的知识回答，但未经训练时不知道"怎么好好说话"</p></div>`,
+  multimodal: `<div class="tt-section"><h5>📖 是什么</h5><p>能同时理解/生成多种模态（文字、图片、音频、视频）的模型。GPT-4o 原生支持图文音视频输入输出。</p></div><div class="tt-section"><h5>💡 代表产品</h5><ul><li><strong>GPT-4o</strong>：语音对话几乎无延迟</li><li><strong>Gemini 1.5 Pro</strong>：200万 token，处理1小时视频</li><li><strong>Claude 3.5</strong>：理解图片中的图表和 UI</li></ul></div><div class="tt-section"><h5>🎯 类比</h5><p>单模态 = 只能读文字的盲人学者；多模态 = 耳聪目明的全能选手，既能读文章也能看图听歌</p></div>`,
+  parameter: `<div class="tt-section"><h5>📖 是什么</h5><p><strong>参数（Parameters）</strong>是模型内部的"知识权重"——数字矩阵。参数量从几十亿到万亿。<strong>推理（Inference）</strong>是模型根据输入预测输出的过程。</p></div><div class="tt-section"><h5>💡 关键数据</h5><ul><li>GPT-4 ~1.8万亿参数（MoE，实际激活约 2200 亿）</li><li>Llama 3 70B = 700亿参数</li><li>手机端模型 7B-8B</li><li>推理一次回答约需千亿级浮点运算</li></ul></div><div class="tt-section"><h5>⚠️ 重要</h5><p>推理成本是训练成本的 <strong>10-100 倍</strong>（因为推理每天发生数十亿次）</p></div><div class="tt-section"><h5>🎯 类比</h5><p>参数 = 人脑的"突触连接"数量。参数越多 = 脑回路越多 = 能处理越复杂的问题，但"思考"也越费时间</p></div>`,
+  diffusion: `<div class="tt-section"><h5>📖 是什么</h5><p>图像/视频生成的主流架构。训练时逐步向图像加噪声（前向扩散），推理时从纯噪声逐步去噪还原出清晰图像（逆向去噪）。</p></div><div class="tt-section"><h5>💡 代表产品</h5><ul><li><strong>Stable Diffusion</strong> — 开源，社区生态丰富</li><li><strong>DALL·E 3</strong> — OpenAI</li><li><strong>Sora</strong> — OpenAI 视频生成</li><li><strong>Flux</strong> — 最新开源图像模型</li></ul></div><div class="tt-section"><h5>🎯 类比</h5><p>Diffusion = 从一团模糊泥巴中逐步雕刻出精美雕塑。先加噪声变成泥巴（训练），再一步步去噪还原（生成）</p></div>`,
+  opensource: `<div class="tt-section"><h5>📖 是什么</h5><p><strong>开源模型</strong>（Llama/Qwen/GLM）可免费下载、修改、本地部署；<strong>闭源模型</strong>（GPT-4/Claude）只能通过 API 调用，数据需发送给厂商。</p></div><div class="tt-section"><h5>💡 对比</h5><ul><li><strong>开源</strong>：数据不出本地、可定制、免费但需硬件</li><li><strong>闭源</strong>：性能更强、免运维、但存在数据隐私和供应商锁定</li></ul></div><div class="tt-section"><h5>🎯 类比</h5><p>开源 = 菜谱公开（自己做饭）；闭源 = 去餐厅（好吃但食谱保密）</p></div>`,
+  sft: `<div class="tt-section"><h5>📖 是什么</h5><p><strong>Supervised Fine-Tuning</strong>。用人工编写的高质量（问题, 理想回答）对，让基础模型学会"以对话形式回答问题"。</p></div><div class="tt-section"><h5>💡 关键点</h5><ul><li>让"会续写文本"的模型学会"以问答格式对话"</li><li>成本比预训练低很多，但高质量标注数据昂贵</li><li>通常数千到数万条高质量样本即可</li></ul></div><div class="tt-section"><h5>🎯 类比</h5><p>SFT = 职业培训。读了大学的通识课（预训练）后，教你"面试时怎么回答问题"（SFT）</p></div>`,
+  rlhf: `<div class="tt-section"><h5>📖 是什么</h5><p><strong>Reinforcement Learning from Human Feedback</strong>。让人类给模型的多个回答排序/打分，训练奖励模型，再用强化学习（PPO）优化 LLM。</p></div><div class="tt-section"><h5>💡 完整流程</h5><pre>① 用 SFT 模型生成多个回答
+② 人类标注员对回答排序/打分
+③ 用排序数据训练"奖励模型"（Reward Model）
+④ 用 PPO 强化学习优化主模型</pre></div><div class="tt-section"><h5>💡 三大目标（3H）</h5><ul><li><strong>Helpful</strong>（有用）：回答真正解决用户问题</li><li><strong>Honest</strong>（诚实）：不编造事实</li><li><strong>Harmless</strong>（无害）：拒绝有害请求</li></ul></div><div class="tt-section"><h5>🎯 类比</h5><p>预训练 = 博士毕业（有知识但不会社交）；RLHF = 礼仪培训（学会文明礼貌，知道什么该说什么不该说）</p></div>`,
+  dpo: `<div class="tt-section"><h5>📖 是什么</h5><p><strong>Direct Preference Optimization</strong>。RLHF 的简化替代——直接用偏好数据（哪个回答更好）训练模型，跳过奖励模型和 PPO 训练。</p></div><div class="tt-section"><h5>💡 优势</h5><ul><li>跳过了"训练奖励模型"和"PPO 训练"两个复杂步骤</li><li>只需一步训练，更简单稳定</li><li>效果相当甚至更好</li><li>Llama 3、Qwen2.5 等主流模型都在使用</li></ul></div><div class="tt-section"><h5>🎯 类比</h5><p>RLHF = 请家教评分→再根据评分改（两步）；DPO = 直接看评分表改自己（一步到位）</p></div>`,
+  lora: `<div class="tt-section"><h5>📖 是什么</h5><p><strong>Low-Rank Adaptation</strong>。不修改原模型参数，而是冻结原模型，只训练极少量的"低秩适配参数"（&lt;1% 原始参数量）。</p></div><div class="tt-section"><h5>💡 原理</h5><pre>原始参数：W（700亿）→ 冻结不动 ❄️
+新增适配：ΔW = A × B（1000万，&lt;1%）→ 只训练这个 ✅
+最终：W' = W + ΔW（合并后和全量微调效果接近）</pre></div><div class="tt-section"><h5>💡 成本对比</h5><ul><li>全量微调 70B：8张A100，~$10万/天</li><li>LoRA 微调 70B：1张A100，~$1-2/小时</li><li>→ 成本降低 <strong>100 倍以上</strong></li></ul></div><div class="tt-section"><h5>🎯 类比</h5><p>全量微调 = 重新上大学（从头学）；LoRA = 上短期培训班（只学新东西，原有的知识不动）</p></div>`,
+  distill: `<div class="tt-section"><h5>📖 是什么</h5><p><strong>Knowledge Distillation</strong>。用大模型（教师）的输出作为训练目标训练小模型（学生），让小模型学到接近大模型的能力。</p></div><div class="tt-section"><h5>💡 关键数据</h5><ul><li>GPT-4 → GPT-4o-mini（速度快10倍，成本降90%）</li><li>Llama 3 70B 蒸馏出 8B 版本</li><li>Phi-3 用 GPT-4 数据蒸馏</li></ul></div><div class="tt-section"><h5>🎯 类比</h5><p>蒸馏 = 教授把毕生所学浓缩成教科书给学生。学生读教科书就能掌握教授 80% 的知识</p></div>`,
+  quantization: `<div class="tt-section"><h5>📖 是什么</h5><p>降低模型参数的数值精度——从 FP16（16位浮点）→ INT8（8位整数）→ INT4（4位整数），大幅减少模型体积和推理内存。</p></div><div class="tt-section"><h5>💡 效果</h5><ul><li>模型体积缩小 2-4 倍</li><li>推理速度提升 2-3 倍</li><li>精度损失极小</li><li>70B 模型：FP16 需 140GB（多卡），INT4 只需 35GB（单卡）</li></ul></div><div class="tt-section"><h5>💡 主流方案</h5><p>GPTQ、AWQ、GGUF。llama.cpp 使用 GGUF 量化让 Llama 在笔记本上运行。</p></div><div class="tt-section"><h5>🎯 类比</h5><p>量化 = 把高清图片压缩成标清。占空间少了，加载快了，画质损失很小（肉眼几乎看不出区别）</p></div>`,
+  rag: `<div class="tt-section"><h5>📖 是什么</h5><p><strong>Retrieval-Augmented Generation</strong>。在让大模型回答前，先从知识库检索相关文档，把文档+问题一起交给模型生成回答。</p></div><div class="tt-section"><h5>💡 工作流程</h5><pre>用户提问 → Embedding向量化 → 检索相关文档
+→ 文档+问题拼装成Prompt → LLM生成回答 → 输出</pre></div><div class="tt-section"><h5>💡 为什么比直接问好</h5><ul><li>减少幻觉（基于真实文档）</li><li>实时信息（连接最新数据）</li><li>私有数据（公司文档、个人笔记）</li><li>可追溯（标注信息来源）</li></ul></div><div class="tt-section"><h5>🎯 类比</h5><p>大模型 = 开卷考试但没带书的考生；RAG = 配了图书馆+搜索引擎。先查资料再答题</p></div>`,
+  embedding: `<div class="tt-section"><h5>📖 是什么</h5><p>把文字/图片转化成一串数字向量（如 1536 维）。语义相近的内容向量也相近——"我爱吃苹果"和"喜欢吃苹果"的向量距离比"苹果手机"近得多。</p></div><div class="tt-section"><h5>💡 用途</h5><ul><li>语义搜索</li><li>推荐系统</li><li>文本分类、聚类</li><li>RAG 的核心组件</li></ul></div><div class="tt-section"><h5>💡 主流方案</h5><p>OpenAI text-embedding-3、BGE（中文效果好）、Cohere Embed</p></div><div class="tt-section"><h5>🎯 类比</h5><p>Embedding = 给每个词/句子一个"坐标"。意思相近的东西在地图上离得近，差别大的离得远</p></div>`,
+  vectordb: `<div class="tt-section"><h5>📖 是什么</h5><p>专门存储和快速检索向量的数据库。能在 1 亿个向量中毫秒级找到与查询最相似的 top-K 个结果。</p></div><div class="tt-section"><h5>💡 主流产品</h5><ul><li><strong>Milvus</strong> — 开源，大规模</li><li><strong>Pinecone</strong> — 云服务</li><li><strong>Chroma</strong> — 轻量开发</li><li><strong>FAISS</strong> — Meta 检索库</li></ul></div><div class="tt-section"><h5>🎯 类比</h5><p>传统数据库 = 精确匹配（必须一模一样）；向量数据库 = 语义搜索（意思差不多就行）</p></div>`,
+  prompt: `<div class="tt-section"><h5>📖 是什么</h5><p>精心设计给 AI 的指令和上下文，引导模型输出更准确有用的内容。</p></div><div class="tt-section"><h5>💡 常用技巧</h5><ul><li><strong>角色设定</strong>："你是一位资深科技记者..."</li><li><strong>Few-shot 示例</strong>：给出几个示例让模型模仿</li><li><strong>分步引导</strong>："先分析，再给方案，最后总结"</li><li><strong>格式约束</strong>："用表格输出，不超过200字"</li></ul></div><div class="tt-section"><h5>🎯 类比</h5><p>Prompt = 给助手的"工作说明书"。你越清楚地说要什么，助手给的成果越接近期望</p></div>`,
+  context: `<div class="tt-section"><h5>📖 是什么</h5><p>上下文窗口是模型一次能处理的最大 token 数。记忆机制让 AI 在多轮对话中保持连贯。</p></div><div class="tt-section"><h5>💡 主流上下文长度</h5><ul><li><strong>GPT-4o</strong>：128K ≈ 10 万字</li><li><strong>Claude 3.5</strong>：200K ≈ 15 万字</li><li><strong>Gemini 1.5 Pro</strong>：200万 ≈ 1500 万字</li></ul></div><div class="tt-section"><h5>🎯 类比</h5><p>上下文 = 人的短时记忆容量。2K = 只记住一句话；200万 = 记住整本书</p></div>`,
+  multimodal_tool: `<div class="tt-section"><h5>📖 是什么</h5><p>处理图像/视频/音频的专用模型：图像生成（Diffusion）、图像理解（Vision Transformer）、语音识别（Whisper）、语音合成（TTS）。</p></div><div class="tt-section"><h5>💡 代表产品</h5><ul><li><strong>Midjourney</strong> — 文生图</li><li><strong>Sora</strong> — 文生视频</li><li><strong>Whisper</strong> — 语音转文字</li><li><strong>Suno</strong> — 文生音乐</li></ul></div><div class="tt-section"><h5>🎯 类比</h5><p>如果说 LLM 是 AI 的大脑，视觉/语音模型就是给 AI 装上眼睛和耳朵</p></div>`,
+  agent: `<div class="tt-section"><h5>📖 是什么</h5><p>比单纯"对话"更进一步的 AI 系统——能自主拆解任务、制定计划、调用工具、执行操作、监控结果，最终完成一个完整目标。</p></div><div class="tt-section"><h5>💡 Agent 核心架构</h5><pre>感知模块 → 接收用户指令
+规划模块 → LLM大脑：分解任务
+记忆模块 → 短期(对话) + 长期(向量DB)
+工具模块 → 搜索/API/代码执行器
+执行模块 → 发邮件/写文件/...</pre></div><div class="tt-section"><h5>🎯 类比</h5><p>LLM = 顾问（你问它答）；Agent = 私人助理（你说目标，它自己想办法完成）</p></div>`,
+  reasoning: `<div class="tt-section"><h5>📖 是什么</h5><p>让 AI 进行复杂推理的方法。CoT（Chain of Thought）一步步思考；ToT（Tree of Thought）探索多条推理路径；ReAct（Reasoning+Acting）交替推理和行动。</p></div><div class="tt-section"><h5>💡 ReAct 示例</h5><pre>问题：北京和上海周末去哪好？
+Thought: 需要比较两个城市的景点和天气
+Action: search("北京周末景点推荐")
+Observation: [故宫、长城...本周天气晴]
+Thought: 还需要了解上海
+Action: search("上海周末景点推荐")
+Answer: [综合推荐...]</pre></div><div class="tt-section"><h5>🎯 类比</h5><p>CoT = 考试要求"写出解题过程"；ReAct = 做研究时"查资料→思考→再查→写报告"</p></div>`,
+  tool_use: `<div class="tt-section"><h5>📖 是什么</h5><p>让大模型生成结构化的"函数调用请求"（如 <code>{"function": "weather", "city": "北京"}</code>），由外部系统执行后返回结果。</p></div><div class="tt-section"><h5>💡 工作流程</h5><pre>问"北京天气" → 模型生成天气API调用请求
+→ 执行API → 返回实时天气数据
+→ 模型基于数据回答</pre></div><div class="tt-section"><h5>🎯 类比</h5><p>大模型 = 聪明但不出门的大脑；Function Calling = 配了手机、电脑、车钥匙——能获取信息也能做事了</p></div>`,
+  mcp: `<div class="tt-section"><h5>📖 是什么</h5><p><strong>MCP（Model Context Protocol）</strong>是 Anthropic 推出的开放协议，定义了 AI 模型与外部工具/数据源之间的标准化连接方式。类似 AI 领域的"USB 接口"。</p></div><div class="tt-section"><h5>💡 为什么重要</h5><ul><li><strong>统一标准</strong>：之前每个 Agent 框架都有自己的工具集成方式，MCP 提供统一协议</li><li><strong>一次接入，到处使用</strong>：工具开发者只需实现一次 MCP Server，所有支持 MCP 的 Client 都能用</li><li><strong>生态爆发</strong>：已有数千个 MCP Server（GitHub、Slack、数据库、文件系统...）</li><li><strong>主流支持</strong>：Anthropic Claude、OpenAI、Cursor、Windsurf 等已支持</li></ul></div><div class="tt-section"><h5>💡 核心架构</h5><pre>MCP Client（如 Claude Desktop）
+    ↕ JSON-RPC over stdio/SSE
+MCP Server（如 GitHub MCP Server）
+    ↕ 调用真实 API
+GitHub / Slack / 数据库 / 文件系统...</pre></div><div class="tt-section"><h5>🎯 类比</h5><p>MCP = AI 的 USB 接口。之前每个工具都要"定制转接头"，现在统一了——插上就能用</p></div>`,
+  memory_sys: `<div class="tt-section"><h5>📖 是什么</h5><p><strong>短期记忆</strong>：保存当前对话上下文。<strong>长期记忆</strong>：将重要信息存入向量数据库，跨会话持久化，让 Agent 积累经验。</p></div><div class="tt-section"><h5>💡 示例</h5><p>告诉 Agent"我素食主义者" → 存入长期记忆 → 一周后问"推荐餐厅" → 它记得只推荐素食餐厅。</p></div><div class="tt-section"><h5>🎯 类比</h5><p>短期记忆 = 聊天记录；长期记忆 = 笔记本。Agent 越用越聪明，因为它会"记笔记"</p></div>`,
+  multiagent: `<div class="tt-section"><h5>📖 是什么</h5><p>多个 Agent 组成"团队"，每个负责不同任务，互相通信协作完成复杂目标。</p></div><div class="tt-section"><h5>💡 示例</h5><pre>用户："做市场调研报告"
+规划Agent → 搜索Agent(搜集信息)
+         → 写作Agent(生成报告)
+         → 审核Agent(检查修改)</pre></div><div class="tt-section"><h5>🎯 类比</h5><p>单 Agent = 自由职业者；多 Agent = 公司团队（各司其职、协作高效）</p></div>`,
+  workflow: `<div class="tt-section"><h5>📖 是什么</h5><p>可视化拖拽编排 AI 工作流程——定义"先做什么、后做什么、条件分支、循环"等逻辑，不需写代码。</p></div><div class="tt-section"><h5>💡 主流平台</h5><ul><li><strong>Dify</strong> — 开源编排</li><li><strong>Coze</strong> — 字节跳动，免费搭Bot</li><li><strong>GPTs</strong> — OpenAI</li><li><strong>n8n</strong> — 自动化工作流</li></ul></div><div class="tt-section"><h5>🎯 类比</h5><p>工作流编排 = 画流程图。画出流程，AI 就按流程自动执行</p></div>`,
+  agent_framework: `<div class="tt-section"><h5>📖 是什么</h5><p>帮助开发者构建 AI Agent 的软件框架——封装了 LLM 调用、工具集成、记忆管理、多 Agent 编排等通用能力，让开发者专注业务逻辑。</p></div><div class="tt-section"><h5>💡 主要框架</h5><ul><li><strong>LangChain / LangGraph</strong> — 生态最大，Agent 编排强</li><li><strong>OpenClaw</strong> — 腾讯，MIT 开源，自托管 Agent，多渠道接入</li><li><strong>CrewAI</strong> — 多 Agent 协作框架</li><li><strong>AutoGen</strong> — 微软，多 Agent 对话式协作</li><li><strong>Dify</strong> — 开源 LLMOps + Agent 平台</li><li><strong>Semantic Kernel</strong> — 微软，企业级</li></ul></div><div class="tt-section"><h5>🎯 类比</h5><p>框架 = 建房的预制构件（梁、柱、板）+ 施工图纸。不用从造砖开始，直接搭房子</p></div>`,
+  agent_platform: `<div class="tt-section"><h5>📖 是什么</h5><p>各科技公司推出的 AI 智能体产品——面向不同场景和用户群体，提供开箱即用的 Agent 能力。</p></div><div class="tt-section"><h5>💡 主要产品</h5><table style="width:100%;font-size:0.85em;border-collapse:collapse;"><tr><th style="text-align:left;padding:4px 8px;border-bottom:1px solid rgba(255,255,255,0.2);">产品</th><th style="text-align:left;padding:4px 8px;border-bottom:1px solid rgba(255,255,255,0.2);">厂商</th><th style="text-align:left;padding:4px 8px;border-bottom:1px solid rgba(255,255,255,0.2);">核心特点</th></tr><tr><td style="padding:4px 8px;">AutoClaw</td><td style="padding:4px 8px;">智谱AI</td><td style="padding:4px 8px;">安全防护强，50+ Skills，飞书接入</td></tr><tr><td style="padding:4px 8px;">CoPaw</td><td style="padding:4px 8px;">阿里巴巴</td><td style="padding:4px 8px;">任务规划快，QQ/飞书/钉钉</td></tr><tr><td style="padding:4px 8px;">LobsterAI</td><td style="padding:4px 8px;">网易有道</td><td style="padding:4px 8px;">综合能力强，钉钉/飞书原生</td></tr><tr><td style="padding:4px 8px;">KimiClaw</td><td style="padding:4px 8px;">月之暗面</td><td style="padding:4px 8px;">多模态输入，40GB云存储</td></tr><tr><td style="padding:4px 8px;">MaxClaw</td><td style="padding:4px 8px;">MiniMax</td><td style="padding:4px 8px;">超长上下文，39元/月SaaS</td></tr><tr><td style="padding:4px 8px;">ArkClaw</td><td style="padding:4px 8px;">字节跳动</td><td style="padding:4px 8px;">企业级RBAC，飞书深度集成</td></tr><tr><td style="padding:4px 8px;">DuClaw</td><td style="padding:4px 8px;">百度</td><td style="padding:4px 8px;">百度生态，安全合规</td></tr><tr><td style="padding:4px 8px;">悟空</td><td style="padding:4px 8px;">阿里巴巴</td><td style="padding:4px 8px;">企业级，多Agent协作</td></tr><tr><td style="padding:4px 8px;">Xiaomi miclaw</td><td style="padding:4px 8px;">小米</td><td style="padding:4px 8px;">移动端Agent，米家IoT联动</td></tr><tr><td style="padding:4px 8px;">小艺Claw</td><td style="padding:4px 8px;">华为</td><td style="padding:4px 8px;">鸿蒙原生，跨设备联动</td></tr><tr><td style="padding:4px 8px;">OpenClaw</td><td style="padding:4px 8px;">开源社区</td><td style="padding:4px 8px;">开源框架，需自寻API</td></tr></table></div><div class="tt-section"><h5>🎯 类比</h5><p>Agent 平台 = 现成的"智能员工"。不用自己培训，直接上岗——有的写代码、有的做PPT、有的管客服</p></div>`,
+  chatbot: `<div class="tt-section"><h5>📖 是什么</h5><p>面向普通用户的 AI 对话产品——基于大模型提供问答、写作、翻译、分析等服务。是最主流的 AI 应用形态。</p></div><div class="tt-section"><h5>💡 主要产品</h5><ul><li><strong>ChatGPT</strong>（OpenAI）— 最知名</li><li><strong>Claude</strong>（Anthropic）— 编程/长文本强</li><li><strong>Kimi</strong>（月之暗面）— 长上下文</li><li><strong>豆包</strong>（字节）— 免费，语音好</li><li><strong>智谱清言</strong>（智谱AI）— 国内合规</li></ul></div><div class="tt-section"><h5>🎯 类比</h5><p>AI 对话助手 = 一个"无所不知的微信好友"——随时可以问任何问题</p></div>`,
+  aigc: `<div class="tt-section"><h5>📖 是什么</h5><p><strong>AI Generated Content</strong>——AI 写文章、AI 绘画、AI 视频、AI 音乐、AI PPT，覆盖各种内容创作。</p></div><div class="tt-section"><h5>💡 代表产品</h5><ul><li>图像：Midjourney、DALL·E、Stable Diffusion、Flux</li><li>视频：Sora、Runway、可灵</li><li>音乐：Suno、Udio</li><li>PPT：Gamma、AiPPT</li></ul></div><div class="tt-section"><h5>🎯 类比</h5><p>AIGC = 给每个人都配了一个"创作团队"——画师、编剧、导演、音乐家</p></div>`,
+  copilot: `<div class="tt-section"><h5>📖 是什么</h5><p>理解代码上下文、自动补全、解释代码、查 bug 的 AI 工具。新一代还能根据自然语言描述生成完整项目。</p></div><div class="tt-section"><h5>💡 主要产品</h5><ul><li><strong>Cursor</strong> — AI 原生代码编辑器，最热门</li><li><strong>GitHub Copilot</strong> — 代码补全，VS Code 插件</li><li><strong>Windsurf</strong>、<strong>通义灵码</strong></li></ul></div><div class="tt-section"><h5>🎯 类比</h5><p>AI 编程助手 = 随时在旁边的资深程序员——你写一行它补十行，卡住了它帮你查文档</p></div>`,
+  search: `<div class="tt-section"><h5>📖 是什么</h5><p>新一代搜索引擎，理解问题→搜索多源→综合生成答案并标注来源。不再返回十条蓝色链接。</p></div><div class="tt-section"><h5>💡 代表产品</h5><ul><li><strong>Perplexity</strong> — 全球最知名</li><li><strong>秘塔AI搜索</strong>、<strong>天工AI搜索</strong></li><li><strong>Google AI Overviews</strong></li></ul></div><div class="tt-section"><h5>🎯 类比</h5><p>传统搜索 = 给你一堆书的图书馆；AI 搜索 = 帮你读书并总结重点的研究助理</p></div>`,
+  robot: `<div class="tt-section"><h5>📖 是什么</h5><p><strong>Embodied AI</strong>——给 AI 一个"身体"（机器人），让它在真实物理世界中感知和行动。AI 的终极形态之一。</p></div><div class="tt-section"><h5>💡 代表产品</h5><ul><li><strong>Tesla Optimus</strong>、<strong>Figure 01</strong></li><li>波士顿动力、<strong>宇树科技</strong>人形机器人</li></ul></div><div class="tt-section"><h5>🎯 类比</h5><p>大模型 = 缸中之脑（只有思考）；具身智能 = 装上眼睛、手、脚——能看能摸能动</p></div>`,
+  vertical: `<div class="tt-section"><h5>📖 是什么</h5><p>针对特定行业深度的 AI：医疗AI（辅助诊断）、金融AI（风控）、法律AI（合同审查）、教育AI（个性化辅导）。</p></div><div class="tt-section"><h5>💡 代表产品</h5><ul><li><strong>AlphaFold</strong> — 蛋白质折叠预测</li><li><strong>Harvey AI</strong> — 法律</li><li><strong>Bloomberg GPT</strong> — 金融</li></ul></div><div class="tt-section"><h5>🎯 类比</h5><p>通用 AI = 全科医生；行业 AI = 专科专家（在自己领域极其精通）</p></div>`,
+  framework: `<div class="tt-section"><h5>📖 是什么</h5><p>帮助开发者快速构建 AI 应用的软件框架——提供调用模型、管理上下文、链接工具、构建 RAG 管道等现成能力。</p></div><div class="tt-section"><h5>💡 主要框架</h5><ul><li><strong>LangChain</strong> — 最流行，生态最丰富</li><li><strong>LlamaIndex</strong> — 专注 RAG</li><li><strong>OpenClaw</strong> — 开源，自托管 Agent</li><li><strong>CrewAI</strong> — 多 Agent 协作</li><li><strong>Semantic Kernel</strong> — 微软出品</li></ul></div><div class="tt-section"><h5>🎯 类比</h5><p>框架 = 预制菜包——菜和调料配好了，你按说明操作就能做出一桌菜</p></div>`,
+  api: `<div class="tt-section"><h5>📖 是什么</h5><p>大模型厂商提供的标准化调用接口。HTTP 请求发送问题，返回答案。按 token 计费。</p></div><div class="tt-section"><h5>💡 主要 API</h5><ul><li>OpenAI API、Anthropic API</li><li>百度文心 API、智谱 GLM API</li><li>几分钟就能给应用加上 AI 能力</li></ul></div><div class="tt-section"><h5>🎯 类比</h5><p>模型 API = 水电费——不用自建发电站，插上接口就能用电，用多少付多少</p></div>`,
+  lowcode: `<div class="tt-section"><h5>📖 是什么</h5><p>不需写代码就能搭建 AI 应用的平台。拖拽、配置定义 AI 行为、连接数据源、设置工作流。</p></div><div class="tt-section"><h5>💡 主要平台</h5><ul><li><strong>Coze</strong>（字节）— 免费搭 Bot</li><li><strong>Dify</strong> — 开源</li><li><strong>GPTs</strong> — OpenAI</li></ul></div><div class="tt-section"><h5>🎯 类比</h5><p>低代码 = 乐高积木——不用造零件，把现成模块拼起来就能搭出 AI 应用</p></div>`,
+  mlops: `<div class="tt-section"><h5>📖 是什么</h5><p><strong>Machine Learning Operations</strong>——管理模型从训练、测试、部署到监控的全生命周期，类似 DevOps 但专为 AI。</p></div><div class="tt-section"><h5>💡 主要工具</h5><ul><li><strong>MLflow</strong> — 模型管理</li><li><strong>Kubeflow</strong> — K8s 上的 ML 平台</li><li><strong>Weights & Biases</strong> — 实验追踪</li></ul></div><div class="tt-section"><h5>🎯 类比</h5><p>MLOps = 汽车 4S 店——模型出厂只是开始，保养、维修、升级才能让它持续好用</p></div>`,
+  local_deploy: `<div class="tt-section"><h5>📖 是什么</h5><p>在自己电脑/服务器上运行开源大模型。数据不出本地，隐私安全，避免 API 费用。</p></div><div class="tt-section"><h5>💡 主要工具</h5><ul><li><strong>Ollama</strong> — 一键运行 Llama/Qwen</li><li><strong>vLLM</strong> — 高性能推理</li><li><strong>LM Studio</strong> — 图形界面版</li></ul></div><div class="tt-section"><h5>🎯 类比</h5><p>API = 外卖（方便但要花钱）；本地部署 = 自己做饭（省钱放心但需要厨房）</p></div>`,
+  eval: `<div class="tt-section"><h5>📖 是什么</h5><p>标准化测试集衡量模型能力——语言理解、数学推理、代码能力等。是"AI 高考"。</p></div><div class="tt-section"><h5>💡 主要基准</h5><ul><li><strong>MMLU</strong> — 多学科理解</li><li><strong>HumanEval</strong> — 代码生成</li><li><strong>MATH</strong> — 数学推理</li><li><strong>C-Eval</strong> — 中文评测</li></ul></div><div class="tt-section"><h5>🎯 类比</h5><p>评测基准 = 手机跑分——分数高不一定体验好，但提供了对比参考</p></div>`
+};
+
+const details = {
+  gpu: { title:'GPU 算力', tag:'基础设施层 · 硬件', what:'GPU（Graphics Processing Unit）图形处理单元，擅长同时执行成千上万个简单运算（并行计算），恰好满足 AI 训练中大规模矩阵运算的需求。英伟达 H100/A100 是当前 AI 训练主力。', why:'训练 GPT-4 级别模型需要约2.5万张 H100 运行 90 天。GPU 算力直接决定模型规模上限和训练速度。', example:'H100 拥有约 800 亿晶体管，单卡售价 $3-4 万美元。算力垄断使英伟达市值突破 3 万亿。', analog:'训练 AI 就像"读万卷书"。GPU = 一万个普通人同时各读一本（并行），CPU = 一个天才一次读一本（串行）。' },
+  tpu: { title:'TPU / NPU', tag:'基础设施层 · 专用芯片', what:'TPU（Tensor Processing Unit）是 Google 为机器学习定制的芯片；NPU（Neural Processing Unit）是华为昇腾、苹果 Neural Engine 等面向终端设备的神经网络处理单元。', why:'专用芯片只做 AI 计算，去掉不需要的功能（如图形渲染），因此更高效、更省电。但生态不如 GPU 丰富。', example:'Google TPU v5p 训练 Gemini；华为昇腾 910B 训练盘古大模型；苹果 Neural Engine 让 iPhone 本地运行 AI 模型。', analog:'GPU = 瑞士军刀（什么都能干），TPU/NPU = 专用手术刀（只干一件事但干得极好）。' },
+  cloud: { title:'云计算平台', tag:'基础设施层 · 云服务', what:'提供按需租用的 GPU/TPU 集群、海量存储和网络资源。开发者无需自建机房，按使用量付费。', why:'AI 训练需要海量资源，99% 的团队买不起。云平台让 AI 算力"像水电一样随用随取"。', example:'AWS SageMaker、Google Cloud AI Platform、Azure AI、腾讯云 TI 平台、阿里云 PAI。', analog:'就像你不需要自建发电站，插上电网就能用电。云计算 = "AI 的国家电网"。' },
+  network: { title:'高速网络互联', tag:'基础设施层 · 网络', what:'当数千张 GPU 一起训练一个模型时，它们需要超高速数据交换。InfiniBand 带宽达 400Gbps，延迟降至微秒级。', why:'GPU 之间要不断同步梯度参数，网络瓶颈会拖慢整个训练集群。万卡集群的网络架构设计是核心竞争力。', example:'英伟达 NVLink + NVSwitch 连接技术；InfiniBand 是大规模训练标准配置。以太网方案也在快速追赶。', analog:'几千张 GPU 协作 = 交响乐团演奏，高速网络 = 让所有乐手同频的指挥系统。网络不好 = 乐队各弹各的。' },
+  storage: { title:'分布式存储', tag:'基础设施层 · 存储', what:'训练数据（TB-PB级）和模型参数（数百GB）需要高性能分布式存储系统，支持高吞吐并发读写。', why:'数据加载速度如果跟不上 GPU 计算速度，GPU 就会空转等待——存储 I/O 成为训练瓶颈。', example:'HDFS、Lustre、GPFS 等并行文件系统；对象存储（S3/OSS/COS）用于数据归档。', analog:'存储系统就像"超级图书馆"——GPU 这群"超级学霸"要同时来借书，图书馆得扛得住。' },
+  energy: { title:'能源与散热', tag:'基础设施层 · 能源', what:'大规模 AI 训练功耗惊人。一个 10 万卡集群功率超 100 兆瓦，相当于一个小城镇用电量，同时产生大量热量。', why:'能源成本占 AI 运营成本的大头；散热不佳会导致芯片降频甚至损坏。这是 AI 基础设施的核心挑战。', example:'xAI Colossus 10万 GPU 集群功率 100MW+；微软考虑核能供电数据中心；液冷（浸没式冷却）成为主流。', analog:'AI 训练 = 永远在跑全力的马拉松运动员，需要不停地"喂饭"（供电）和"降温"（散热）。' },
+  data_source: { title:'训练数据源', tag:'数据层 · 数据源', what:'大模型的学习材料来源：互联网网页、书籍、代码、论文、对话记录等。GPT-4 训练数据估计超 13 万亿 token。', why:'数据是 AI 的"教材"。数据质量直接决定模型能力上限——"Garbage in, Garbage out"。', example:'Common Crawl（万亿级网页）、Wikipedia（6400万+词条）、GitHub（千亿行代码）、ArXiv（240万+论文）、YouTube 字幕。', analog:'数据 = AI 的"教材"。读 100 本书的模型 vs 读 1000 万本书的模型，"见识"完全不同。' },
+  data_eng: { title:'数据工程', tag:'数据层 · 数据工程', what:'原始数据不能直接用——需要经过：去重（删除重复内容）、清洗（去除垃圾/有害内容）、过滤（按质量阈值筛选）、格式化（统一格式）。', why:'未经清洗的数据包含大量噪声——重复网页、广告、乱码、恶意内容等，会严重影响模型质量。数据工程占 AI 开发 60-80% 时间。', example:'训练 GPT 4 之前，OpenAI 对 Common Crawl 做了多层过滤：按困惑度（perplexity）筛选高质量文档、去重、去有害内容。', analog:'数据工程就像"编辑整理书稿"——去掉错别字、删除重复章节、过滤低质量内容，只留精华给学生。' },
+  tokenization: { title:'分词与编码', tag:'数据层 · 分词', what:'模型不认识文字，只认识数字。Tokenizer 把文本切成 token（词/字/子词），再映射成整数 ID。"Hello world" 可能变成 [15496, 995]。', why:'理解 tokenizer 是理解 LLM 计费（按 token）、上下文限制（能处理多少 token）和模型能力的基础。', example:'中文"人工智能"可能被切成 ["人工", "智能"] 2个token，或 ["人", "工", "智", "能"] 4个token，取决于分词方案。BPE 是最主流的方法。', analog:'Tokenizer = 翻译官，把人类的文字翻译成模型能理解的"数字密码"。就像把中文翻译成摩尔斯电码。' },
+  annotation: { title:'数据标注', tag:'数据层 · 标注', what:'人工创建高质量的训练样本：(1) SFT 标注——写问答对；(2) 偏好标注——对模型回答排序/打分（用于 RLHF）。', why:'预训练数据是"野生"的，SFT 和对齐需要"精养"的高质量数据。标注数据质量直接决定微调和对齐效果。', example:'OpenAI 据说雇了上千名 PhD 级标注员；Scale AI 是最大的数据标注平台；很多中国团队也在用 RLHF 做中文对齐。', analog:'预训练数据 = 互联网（自学成才），标注数据 = 名师辅导（精心编写教材和答案）。' },
+  synthetic: { title:'合成数据', tag:'数据层 · 合成', what:'用 AI 生成训练数据：(1) 强模型生成弱模型的训练数据（蒸馏）；(2) 用模型自我生成数据进行自我改进；(3) 生成特定场景的模拟数据。', why:'很多领域（医疗、法律）真实数据稀缺且敏感。合成数据可以低成本、大规模地补充训练数据，是 2024-2025 年的重要趋势。', example:'Phi 系列模型大量使用 GPT-4 生成的合成数据训练；Phi-3 仅用"教科书级"合成数据就达到很强效果。', analog:'合成数据 = 用"学霸的笔记"教"新生"。学霸（强模型）整理出学习资料，新生（弱模型）照着学。' },
+  data_quality: { title:'数据质量与合规', tag:'数据层 · 治理', what:'数据版权（训练数据是否有合法授权）、隐私保护（个人数据脱敏）、偏见检测（数据是否有歧视）、数据治理（建立数据质量标准）。', why:'《纽约时报》起诉 OpenAI 侵权；GDPR 限制数据使用；模型偏见可能导致歧视性输出。数据合规是 AI 可持续发展的基础。', example:'Meta 使用公开数据训练 Llama 面临版权争议；欧盟 AI Act 要求数据透明度；中国《生成式AI管理办法》要求训练数据合法。', analog:'数据合规就像"食品安全"——食材来源要合法、加工过程要卫生、成品要检测有害物质。' },
+  transformer: { title:'Transformer 架构', tag:'模型层 · 核心架构', what:'2017 年 Google 提出的神经网络架构。核心是自注意力机制（Self-Attention）——让模型处理每个词时都能"看到"上下文所有其他词的关系。由编码器（Encoder）和解码器（Decoder）组成。', why:'解决了之前 RNN/CNN 无法高效处理长距离依赖和无法并行训练的问题。当前几乎所有大模型都基于 Transformer。', example:'"猫坐在垫子上，因为它很累"——Self-Attention 让模型处理"它"时自动关注"猫"，理解指代关系。', analog:'之前模型 = 逐字阅读（看一个忘前面），Transformer = 一目十行（写每个字都同时参考全文）。' },
+  attention: { title:'注意力机制', tag:'模型层 · 核心机制', what:'自注意力（Self-Attention）的计算原理：对每个 token，计算它与序列中所有其他 token 的"相关性分数"，然后加权求和得到该 token 的新表示。通过 Q(查询)K(键)V(值) 三个矩阵实现。', why:'注意力机制是 Transformer 的灵魂。多头注意力（Multi-Head Attention）让模型同时关注不同类型的关系（语法、语义、指代等）。', example:'"苹果公司发布新手机" → 注意力机制让"苹果"同时关注"公司"（非水果义）和"发布"（动作）和"手机"（产品）。', analog:'注意力 = 开会时"知道该听谁说话"。模型处理"它"时，注意力机制告诉它："重点听'猫'说的，别管'垫子'"。' },
+  pretrain: { title:'预训练 Pre-training', tag:'模型层 · 训练', what:'在大规模无标注文本上进行的自监督训练。核心任务："给定前文，预测下一个词"。模型通过数万亿次预测不断调整参数，最终学到了语言规律和世界知识。', why:'预训练消耗 AI 开发 90%+ 的算力和成本（数千万美元）。但它产出的"基础模型"具备通用语言能力，是后续所有优化的起点。', example:'GPT-4 预训练：2.5万张 H100 × 90天，成本约 $1亿；Llama 3 预训练：2.4万张 GPU × 30天。训练过程看到约 15万亿 token。', analog:'预训练 = 通识教育。读完互联网所有书 → 什么都知道一点但不会"和人说话"。这是大学的"通修课"。' },
+  llm: { title:'大语言模型 LLM', tag:'模型层 · 模型', what:'Large Language Model——通过预训练获得语言理解和生成能力的大型神经网络。能对话、写作、翻译、写代码、推理。', why:'LLM 是当前 AI 浪潮的核心引擎。几乎所有 AI 应用底层都调用 LLM。它证明了"规模法则"——数据越多、模型越大，能力越强。', example:'闭源：GPT-4o（OpenAI）、Claude 3.5（Anthropic）、Gemini（Google）。开源：Llama 3（Meta）、Qwen2.5（阿里）、GLM-4（智谱）。', analog:'LLM = 一个"读了全人类书籍"的超级学霸。你问什么它都能基于学过的知识回答，但未经训练时不知道"怎么好好说话"。' },
+  multimodal: { title:'多模态模型', tag:'模型层 · 多模态', what:'能同时理解/生成多种模态（文字、图片、音频、视频）的模型。GPT-4o 原生支持图文音视频输入输出。', why:'人类通过多感官感知世界。多模态让 AI 从"只能读文字"进化到"能看能听"，能力范围大幅扩展。', example:'GPT-4o：语音对话几乎无延迟；Gemini 1.5 Pro：200万 token 处理1小时视频；Claude 3.5：理解图片中的图表和UI。', analog:'单模态 = 只能读文字的盲人学者；多模态 = 耳聪目明的全能选手，既能读文章也能看图听歌。' },
+  parameter: { title:'参数与推理', tag:'模型层 · 原理', what:'参数（Parameters）是模型内部的"知识权重"——数字矩阵。参数量从几十亿到万亿。推理（Inference）是模型根据输入预测输出的过程。', why:'参数量决定模型容量（通常越大越好但不绝对）。推理成本 = 训练成本的 10-100倍（因为每次对话都在推理）。', example:'GPT-4 ~1.8万亿参数（MoE，实际激活约 2200 亿）；Llama 3 70B = 700亿参数；手机端模型 7B-8B。推理一次回答约需千亿级浮点运算。', analog:'参数 = 人脑的"突触连接"数量。参数越多 = 脑回路越多 = 能处理越复杂的问题，但"思考"也越费时间。' },
+  diffusion: { title:'扩散模型 Diffusion', tag:'模型层 · 生成模型', what:'图像/视频生成的主流架构。原理：训练时逐步向图像加噪声（前向扩散），推理时从纯噪声逐步去噪还原出清晰图像（逆向去噪）。', why:'Diffusion 架构催生了 Midjourney、DALL·E、Stable Diffusion、Sora 等爆款产品。和 Transformer 不同，这是图像生成领域的主流架构。', example:'Stable Diffusion（开源，社区生态丰富）、DALL·E 3（OpenAI）、Sora（OpenAI 视频生成）、Flux（最新开源图像模型）。', analog:'Diffusion = 从一团模糊泥巴中逐步雕刻出精美雕塑。先加噪声变成泥巴（训练），再一步步去噪还原（生成）。' },
+  opensource: { title:'开源 vs 闭源', tag:'模型层 · 生态', what:'开源模型（Llama/Qwen/GLM）可免费下载、修改、本地部署；闭源模型（GPT-4/Claude）只能通过 API 调用，数据需发送给厂商。', why:'这是 AI 领域最核心的战略分歧。开源促进创新和民主化，闭源通过 API 提供更强性能但存在数据隐私和供应商锁定风险。', example:'Llama 3（Meta，完全开源）可在自有服务器运行；GPT-4（OpenAI，闭源）只能通过 API 调用，数据出境。', analog:'开源 = 菜谱公开（自己做饭）；闭源 = 去餐厅（好吃但食谱保密）。' },
+  sft: { title:'监督微调 SFT', tag:'模型优化层 · 微调', what:'Supervised Fine-Tuning。用人工编写的高质量（问题, 理想回答）对，让基础模型学会"以对话形式回答问题"。', why:'预训练模型只会"续写文本"，SFT 教它"当用户提问时，给出有用的回答"。是从 Base Model 到可用模型的关键一步。', example:'OpenAI 用数千条人工编写的示例做 SFT；Alpaca 论文展示了用 GPT-4 自动生成 SFT 数据的方法。', analog:'SFT = 职业培训。读了大学的通识课（预训练）后，教你"面试时怎么回答问题"（SFT）。' },
+  rlhf: { title:'RLHF 人类反馈对齐', tag:'模型优化层 · 对齐', what:'Reinforcement Learning from Human Feedback。让人类给模型的多个回答排序/打分，训练一个奖励模型，再用强化学习（PPO）优化 LLM 使其生成人类更喜欢的回答。', why:'RLHF 解决了三大问题：有用性（Helpful）、诚实性（Honest）、无害性（Harmless）。是 ChatGPT 成功的关键技术。', example:'训练过程：模型生成 4 个回答 → 人类排序（第2个最好 > 第1个 > 第4个 > 第3个）→ 训练奖励模型 → 用 PPO 优化主模型。', analog:'预训练 = 博士毕业（有知识但不会社交）；RLHF = 礼仪培训（学会文明礼貌，知道什么该说什么不该说）。' },
+  dpo: { title:'DPO 直接偏好优化', tag:'模型优化层 · 对齐', what:'Direct Preference Optimization。RLHF 的简化替代方案——直接用偏好数据（哪个回答更好）训练模型，跳过奖励模型和 PPO 训练两个复杂步骤。', why:'RLHF 流程复杂（需要训练奖励模型 + PPO 训练，超参多不稳定）。DPO 只需一步训练，更简单稳定，效果相当甚至更好。', example:'Llama 3、Qwen2.5 等模型都在使用 DPO 或其变体进行对齐训练。Zephyr 7B 用 DPO 达到超越 RLHF 的效果。', analog:'RLHF = 请家教评分→再根据评分改（两步）；DPO = 直接看评分表改自己（一步到位）。' },
+  lora: { title:'LoRA / QLoRA', tag:'模型优化层 · 高效微调', what:'Low-Rank Adaptation。不修改原模型参数，而是冻结原模型，只训练极少量的"低秩适配参数"（<1% 原始参数量），就能让模型适配特定领域。', why:'全量微调 70B 模型需要 8 张 A100（约 $10万/天）；LoRA 微调只需 1 张 A100（约 $1-2/小时）。成本降低 100 倍以上。', example:'用 1000 条医疗问答 LoRA 微调 Qwen-7B → 得到医疗领域专用模型。Hugging Face PEFT 库提供 LoRA 实现。', analog:'全量微调 = 重新上大学（从头学）；LoRA = 上短期培训班（只学新东西，原有的知识不动）。效果接近，成本差百倍。' },
+  distill: { title:'知识蒸馏', tag:'模型优化层 · 蒸馏', what:'Knowledge Distillation。用大模型（教师模型）的输出作为训练目标来训练小模型（学生模型），让小模型学到接近大模型的能力。', why:'70B 模型效果好但部署成本高（需要 140GB 显存）；7B 模型部署便宜但能力弱。蒸馏让小模型拥有大模型 80-90% 的能力，但成本只有 1/10。', example:'GPT-4 蒸馏出 GPT-4o-mini（速度快10倍，成本降90%）；Llama 3 70B 蒸馏出 8B 版本；Phi-3 用 GPT-4 数据蒸馏。', analog:'蒸馏 = 教授把毕生所学浓缩成教科书给学生。学生读教科书就能掌握教授 80% 的知识，但学习成本低得多。' },
+  quantization: { title:'量化 Quantization', tag:'模型优化层 · 压缩', what:'降低模型参数的数值精度——如从 FP16（16位浮点）→ INT8（8位整数）→ INT4（4位整数），大幅减少模型体积和推理内存。', why:'70B 模型 FP16 需要 140GB 显存（需要多卡）；INT4 量化后只需 35GB（单张 A100 即可运行）。速度也可能提升 2-3 倍。', example:'GPTQ、AWQ、GGUF 是主流量化方案。llama.cpp 使用 GGUF 量化让 Llama 在笔记本上运行。', analog:'量化 = 把高清图片压缩成标清。占空间少了，加载快了，画质损失很小（肉眼几乎看不出区别）。' },
+  rag: { title:'RAG 检索增强生成', tag:'能力增强层 · 检索增强', what:'Retrieval-Augmented Generation。在让大模型回答前，先从知识库检索相关文档，把文档+问题一起交给模型生成回答。', why:'模型知识有截止日期、不知道私有数据、可能"幻觉"（瞎编）。RAG 让模型"翻书查资料"再回答，大幅提升准确性。', example:'问"公司报销流程？" → RAG 先检索公司制度文档 → 把文档+问题发给 LLM → 基于文档内容回答。', analog:'大模型 = 开卷考试但没带书的考生；RAG = 配了图书馆+搜索引擎。先查资料再答题。' },
+  embedding: { title:'Embedding 向量化', tag:'能力增强层 · 向量', what:'把文字/图片转化成一串数字向量（如 1536 维）。语义相近的内容向量也相近——"我爱吃苹果"和"喜欢吃苹果"的向量距离比"苹果手机"近得多。', why:'向量化是 RAG、推荐、语义搜索的基石。只有变成数字，计算机才能计算"两段话意思有多接近"。', example:'OpenAI text-embedding-3-small（1536维）、BGE（中文效果好）、Cohere Embed。', analog:'Embedding = 给每个词/句子一个"坐标"。意思相近的东西在地图上离得近，差别大的离得远。' },
+  vectordb: { title:'向量数据库', tag:'能力增强层 · 数据库', what:'专门存储和快速检索向量的数据库。能在 1 亿个向量中毫秒级找到与查询最相似的 top-K 个结果。', why:'RAG 的核心组件。当你有大量文档需要 AI 参考，向量数据库负责快速找到最相关的那些。', example:'Milvus（开源，大规模）、Pinecone（云服务）、Chroma（轻量开发）、FAISS（Meta 检索库）。', analog:'传统数据库 = 精确匹配（必须一模一样）；向量数据库 = 语义搜索（意思差不多就行）。' },
+  prompt: { title:'Prompt 工程', tag:'能力增强层 · 交互', what:'精心设计给 AI 的指令和上下文，引导模型输出更准确有用的内容。技巧包括：角色设定、Few-shot 示例、分步骤引导、格式约束等。', why:'同一模型，好 Prompt 和差 Prompt 的输出质量天差地别。掌握 Prompt 是使用 AI 的基本能力。', example:'差："写一篇文章" vs 好："你是资深科技记者，写 800 字 AI 科普文章，面向初中生，用生活化比喻解释 Transformer"。', analog:'Prompt = 给助手的"工作说明书"。你越清楚地说要什么，助手给的成果越接近期望。' },
+  context: { title:'长上下文 & 记忆', tag:'能力增强层 · 上下文', what:'上下文窗口是模型一次能处理的最大 token 数。从早期 2K 发展到现在 200 万。记忆机制让 AI 在多轮对话中保持连贯。', why:'长上下文让你能丢一本书给 AI 总结，丢一个代码库让它理解。这决定了 AI 能处理多复杂、多长的任务。', example:'Gemini 1.5 Pro 200万 token（≈2000页书）；Claude 20万；GPT-4o 128K。', analog:'上下文 = 人的短时记忆容量。2K = 只记住一句话；200万 = 记住整本书。' },
+  multimodal_tool: { title:'视觉 & 语音模型', tag:'能力增强层 · 感知', what:'处理图像/视频/音频的专用模型：图像生成（Diffusion）、图像理解（Vision Transformer）、语音识别（Whisper）、语音合成（TTS）。', why:'AI 不只能处理文字。视觉/语音模型给 AI 装上"眼睛""耳朵""嘴巴"。', example:'Midjourney（文生图）、Sora（文生视频）、Whisper（语音转文字）、Suno（文生音乐）。', analog:'如果说 LLM 是 AI 的大脑，视觉/语音模型就是给 AI 装上眼睛和耳朵。' },
+  agent: { title:'AI Agent 智能体', tag:'智能体层 · 核心', what:'比单纯"对话"更进一步的 AI 系统——能自主拆解任务、制定计划、调用工具、执行操作、监控结果，最终完成一个完整目标。', why:'LLM 是大脑（能说），Agent 是大脑+手脚（能做）。Agent 让 AI 从"聊天机器人"变成"私人助理"。', example:'你告诉 Agent"调研竞品写报告" → 它自动搜索信息 → 整理数据 → 生成报告 → 发到你邮箱。全程自主。', analog:'LLM = 顾问（你问它答）；Agent = 私人助理（你说目标，它自己想办法完成）。' },
+  reasoning: { title:'推理与规划', tag:'智能体层 · 推理', what:'让 AI 进行复杂推理的方法。CoT（Chain of Thought）一步步思考；ToT（Tree of Thought）探索多条推理路径；ReAct（Reasoning+Acting）交替推理和行动。', why:'简单问题直接回答，复杂问题（数学、逻辑、多步规划）需要"想清楚再回答"。推理能力是 Agent 执行复杂任务的关键。', example:'ReAct：思考→搜索→观察→思考→搜索→观察→思考→回答。像人类解决问题一样"边想边查边做"。', analog:'CoT = 考试要求"写出解题过程"；ReAct = 做研究时"查资料→思考→再查→写报告"。' },
+  tool_use: { title:'Function Calling 工具调用', tag:'智能体层 · 工具', what:'让大模型生成结构化的"函数调用请求"（如 {"function": "weather", "city": "北京"}），由外部系统执行后返回结果。模型基于结果继续生成。', why:'模型知识有限且可能过时。通过工具调用获取实时信息、操作真实系统，突破模型自身能力边界。', example:'问"北京天气" → 模型生成调用天气 API 的请求 → 执行 API → 返回实时天气数据 → 模型基于数据回答。', analog:'大模型 = 聪明但不出门的大脑；Function Calling = 配了手机、电脑、车钥匙——能获取信息也能做事了。' },
+  mcp: { title:'MCP 协议', tag:'智能体层 · 协议', what:'MCP（Model Context Protocol）是 Anthropic 推出的开放协议，定义了 AI 模型与外部工具/数据源之间的标准化连接方式。类似 AI 领域的"USB 接口"——一次接入，到处使用。', why:'之前每个 Agent 框架都有自己的工具集成方式，MCP 统一了这个标准。工具开发者只需实现一次 MCP Server，所有支持 MCP 的 Client 都能用，大幅降低了 AI 工具生态的碎片化。', example:'已有数千个 MCP Server：GitHub、Slack、PostgreSQL、文件系统、Puppeteer 浏览器等。Claude Desktop、Cursor、Windsurf 等均已支持 MCP。', analog:'MCP = AI 的 USB 接口。之前每个工具都要"定制转接头"，现在统一了——插上就能用。' },
+  memory_sys: { title:'Agent 记忆系统', tag:'智能体层 · 记忆', what:'短期记忆：保存当前对话上下文。长期记忆：将重要信息存入向量数据库，跨会话持久化，让 Agent 积累经验和了解用户偏好。', why:'没有记忆的 Agent 每次从零开始。有记忆的 Agent 越用越懂你，提供个性化服务。', example:'你告诉 Agent"我素食主义者" → 存入长期记忆 → 一周后问"推荐餐厅" → 它记得只推荐素食餐厅。', analog:'短期记忆 = 聊天记录；长期记忆 = 笔记本。Agent 越用越聪明，因为它会"记笔记"。' },
+  multiagent: { title:'多 Agent 协作', tag:'智能体层 · 协作', what:'多个 Agent 组成"团队"，每个负责不同任务，互相通信协作完成复杂目标。如一个搜索、一个写作、一个审核。', why:'单个 Agent 能力有限。多 Agent 协作像公司团队各司其职，能完成单个 Agent 做不到的复杂项目。', example:'Devin 内部：规划 Agent（拆任务）→ 编码 Agent（写代码）→ 测试 Agent（跑测试）→ 调试 Agent（修 bug）。', analog:'单 Agent = 自由职业者；多 Agent = 公司团队（各司其职、协作高效）。' },
+  workflow: { title:'工作流编排', tag:'智能体层 · 编排', what:'可视化拖拽编排 AI 工作流程——定义"先做什么、后做什么、条件分支、循环"等逻辑，不需写代码。', why:'降低 AI 应用开发门槛，让不懂编程的人也能搭建 AI Agent 和自动化流程。', example:'Dify（开源编排）、Coze（字节跳动）、GPTs、n8n（自动化）。', analog:'工作流编排 = 画流程图。画出"收到邮件→分析→生成回复→发送"的流程，AI 就按流程自动执行。' },
+  agent_framework: { title:'Agent 开发框架', tag:'智能体层 · 框架', what:'帮助开发者构建 AI Agent 的软件框架——封装了 LLM 调用、工具集成、记忆管理、多 Agent 编排等通用能力。', why:'从零对接各种 API 和工具很复杂。框架标准化重复工作，让开发者专注业务逻辑和 Agent 行为设计。', example:'LangChain/LangGraph（生态最大）、OpenClaw（腾讯开源，自托管）、CrewAI（多Agent协作）、AutoGen（微软）、Semantic Kernel（企业级）。', analog:'框架 = 建房的预制构件（梁、柱、板）+ 施工图纸。不用从造砖开始，直接搭房子。' },
+  agent_platform: { title:'AI Agent 平台与工具', tag:'智能体层 · 平台', what:'各科技公司推出的 AI 智能体产品——覆盖办公、开发、IoT、企业级等场景，提供开箱即用的 Agent 能力。', why:'让普通用户和开发者无需深入技术细节，直接使用或构建 Agent。是 AI Agent 技术商业化的核心载体。', example:'智谱AutoClaw（安全+飞书）、阿里CoPaw（多渠道）、网易LobsterAI（综合能力强）、月之暗面KimiClaw（多模态）、MiniMax MaxClaw（长上下文）、字节ArkClaw（飞书企业级）、百度DuClaw（合规）、阿里悟空（多Agent）、小米miclaw（IoT）、华为小艺Claw（鸿蒙）、OpenClaw（开源）。', analog:'Agent 平台 = 现成的"智能员工"。不用自己培训，直接上岗——有的写代码、有的做PPT、有的管客服。' },
+  chatbot: { title:'AI 对话助手', tag:'应用层 · 对话', what:'面向普通用户的 AI 对话产品——基于大模型提供问答、写作、翻译、分析等服务。是最主流的 AI 应用形态。', why:'对话是最自然的交互方式，让每个人零门槛使用 AI。', example:'ChatGPT（OpenAI）、Claude（Anthropic）、Kimi（月之暗面）、豆包（字节）、智谱清言（智谱AI）。', analog:'AI 对话助手 = 一个"无所不知的微信好友"——随时可以问任何问题。' },
+  aigc: { title:'AIGC 内容生成', tag:'应用层 · 创作', what:'AI Generated Content——AI 写文章、AI 绘画、AI 视频、AI 音乐、AI PPT，覆盖各种内容创作。', why:'大幅降低内容创作门槛和成本。一个人+AI=一个团队。', example:'Midjourney/Sora（图像/视频）、Suno（音乐）、Gamma（PPT）、妙笔（写作）。', analog:'AIGC = 给每个人都配了一个"创作团队"——画师、编剧、导演、音乐家。' },
+  copilot: { title:'AI 编程助手', tag:'应用层 · 编程', what:'理解代码上下文、自动补全、解释代码、查 bug 的 AI 工具。新一代还能根据自然语言描述生成完整项目。', why:'开发者效率提升 2-10 倍，也让非程序员能"写"代码。', example:'Cursor（AI原生编辑器）、GitHub Copilot（代码补全）、Windsurf、通义灵码。', analog:'AI 编程助手 = 随时在旁边的资深程序员——你写一行它补十行，卡住了它帮你查文档。' },
+  search: { title:'AI 搜索', tag:'应用层 · 搜索', what:'新一代搜索引擎，理解问题→搜索多源→综合生成答案并标注来源。不再返回十条蓝色链接。', why:'传统搜索需要自己筛选；AI 搜索直接给答案+来源，效率大幅提升。', example:'Perplexity、秘塔AI搜索、天工AI搜索、Google AI Overviews。', analog:'传统搜索 = 给你一堆书的图书馆；AI 搜索 = 帮你读书并总结重点的研究助理。' },
+  robot: { title:'具身智能', tag:'应用层 · 具身', what:'Embodied AI——给 AI 一个"身体"（机器人），让它在真实物理世界中感知和行动。AI 的终极形态之一。', why:'当前 AI 只在数字世界工作。具身智能让它做家务、进工厂、探索太空。', example:'Tesla Optimus、Figure 01、波士顿动力、宇树科技人形机器人。', analog:'大模型 = 缸中之脑（只有思考）；具身智能 = 装上眼睛、手、脚——能看能摸能动。' },
+  vertical: { title:'行业 AI 应用', tag:'应用层 · 行业', what:'针对特定行业深度的 AI：医疗AI（辅助诊断）、金融AI（风控）、法律AI（合同审查）、教育AI（个性化辅导）。', why:'通用 AI 在专业领域不够深入。行业AI结合领域知识解决核心痛点。', example:'AlphaFold（蛋白质折叠）、Harvey AI（法律）、Bloomberg GPT（金融）。', analog:'通用 AI = 全科医生；行业 AI = 专科专家（在自己领域极其精通）。' },
+  framework: { title:'Agent 开发框架', tag:'开发工具层 · 框架', what:'面向开发者的 AI 应用构建工具——提供 SDK、模板、调试器、部署方案等完整开发体验。和 L6 框架的区别：L6 侧重概念和运行机制，L8 侧重开发者实际使用的工具链。', why:'开发者需要的不只是概念，而是能直接 import、调试、部署的工具包。框架让 AI 开发像普通软件开发一样高效。', example:'LangChain（Python/JS SDK + LangSmith 调试平台）、LlamaIndex（RAG 管道）、OpenClaw（自托管 + MCP）、Hugging Face Transformers、vLLM（推理引擎）。', analog:'框架 = 开发者的"瑞士军刀"——各种 AI 开发常用功能集成在一起，按需取用。' },
+  api: { title:'模型 API', tag:'开发工具层 · 接口', what:'大模型厂商提供的标准化调用接口。HTTP 请求发送问题，返回答案。按 token 计费。', why:'99% 开发者不需要自己训练模型。通过 API 几分钟就能给应用加上 AI 能力。', example:'OpenAI API、Anthropic API、百度文心 API、智谱 GLM API。', analog:'模型 API = 水电费——不用自建发电站，插上接口就能用电，用多少付多少。' },
+  lowcode: { title:'低代码平台', tag:'开发工具层 · 低代码', what:'不需写代码就能搭建 AI 应用的平台。拖拽、配置定义 AI 行为、连接数据源、设置工作流。', why:'让不会编程的人（产品、运营、老师）也能搭建 AI 工具，AI 民主化的推手。', example:'Coze（字节，免费搭Bot）、Dify（开源）、GPTs（OpenAI）。', analog:'低代码 = 乐高积木——不用造零件，把现成模块拼起来就能搭出 AI 应用。' },
+  mlops: { title:'MLOps 平台', tag:'开发工具层 · 运维', what:'Machine Learning Operations——管理模型从训练、测试、部署到监控的全生命周期，类似 DevOps 但专为 AI。', why:'模型上线会"退化"（数据漂移），需要持续监控重训练。MLOps 让这个过程自动化。', example:'MLflow（模型管理）、Kubeflow（K8s上的ML平台）、Weights & Biases（实验追踪）。', analog:'MLOps = 汽车 4S 店——模型出厂只是开始，保养、维修、升级才能让它持续好用。' },
+  local_deploy: { title:'本地部署', tag:'开发工具层 · 部署', what:'在自己电脑/服务器上运行开源大模型。数据不出本地，隐私安全，避免 API 费用。', why:'适合对隐私要求高的场景（医疗、金融）。但需要一定硬件配置。', example:'Ollama（一键运行 Llama/Qwen）、vLLM（高性能推理）、LM Studio（图形界面版）。', analog:'API = 外卖（方便但要花钱）；本地部署 = 自己做饭（省钱放心但需要厨房）。' },
+  eval: { title:'评测基准', tag:'开发工具层 · 评测', what:'标准化测试集衡量模型能力——语言理解、数学推理、代码能力等。是"AI 高考"。', why:'厂商都说自己最强，评测提供客观比较。但分数不完全等于实际体验。', example:'MMLU（多学科）、HumanEval（代码）、MATH（数学）、C-Eval（中文）。', analog:'评测基准 = 手机跑分——分数高不一定体验好，但提供了对比参考。' }
+};
+
+function showDetail(id) {
+  const md = mdContent[id];
+  const detail = details[id];
+  if (!md || !detail) return;
+
+  // Highlight active card - find by onclick attribute
+  document.querySelectorAll('.concept-card').forEach(c => c.classList.remove('active'));
+  var cardEl = null;
+  var allCards = document.querySelectorAll('.concept-card');
+  for (var i = 0; i < allCards.length; i++) {
+    var oc = allCards[i].getAttribute('onclick');
+    if (oc && oc.indexOf("'" + id + "'") !== -1) {
+      allCards[i].classList.add('active');
+      cardEl = allCards[i];
+      break;
+    }
+  }
+
+  // Determine layer class for color
+  var layerClass = '';
+  if (cardEl) {
+    var layerEl = cardEl.closest('[class*="layer-"]');
+    if (layerEl) {
+      var classes = layerEl.classList;
+      for (var j = 0; j < classes.length; j++) {
+        if (classes[j].indexOf('layer-') === 0) { layerClass = classes[j]; break; }
+      }
+    }
+  }
+
+  // Store current id for "view more" button
+  window._currentPopupId = id;
+
+  document.getElementById('popupContent').innerHTML =
+    '<div class="popup-title">' + detail.title + '</div>' +
+    '<div class="popup-tag ' + layerClass + '">' + detail.tag + '</div>' +
+    md +
+    '<button class="popup-more-btn" id="popupMoreBtn">查看完整详情 →</button>';
+
+  document.getElementById('clickPopup').classList.add('visible');
+  document.getElementById('clickPopupOverlay').classList.add('visible');
+}
+
+function closePopup() {
+  document.getElementById('clickPopup').classList.remove('visible');
+  document.getElementById('clickPopupOverlay').classList.remove('visible');
+  document.querySelectorAll('.concept-card').forEach(c => c.classList.remove('active'));
+}
+
+function openFullDetail() {
+  var id = window._currentPopupId;
+  if (!id) return;
+  closePopup();
+  setTimeout(function() {
+    var d = details[id];
+    if (!d) return;
+    // Highlight card by onclick attribute
+    document.querySelectorAll('.concept-card').forEach(c => c.classList.remove('active'));
+    var allCards = document.querySelectorAll('.concept-card');
+    for (var i = 0; i < allCards.length; i++) {
+      var oc = allCards[i].getAttribute('onclick');
+      if (oc && oc.indexOf("'" + id + "'") !== -1) { allCards[i].classList.add('active'); break; }
+    }
+    document.getElementById('detailContent').innerHTML =
+      '<div class="detail-tag">' + d.tag + '</div>' +
+      '<h2>' + d.title + '</h2>' +
+      '<div class="detail-section"><h4>📖 是什么？</h4><p>' + d.what + '</p></div>' +
+      '<div class="detail-section"><h4>❓ 为什么重要？</h4><p>' + d.why + '</p></div>' +
+      '<div class="detail-section"><h4>💡 举个例子</h4><p>' + d.example + '</p></div>' +
+      '<div class="detail-section"><h4>🎯 一句话类比</h4><p style="color:#fbbf24;font-style:italic;">' + d.analog + '</p></div>';
+    document.getElementById('detailPanel').classList.add('open');
+    document.getElementById('overlay').classList.add('open');
+  }, 200);
+}
+
+function closeDetail() {
+  document.getElementById('detailPanel').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+  document.querySelectorAll('.concept-card').forEach(c => c.classList.remove('active'));
+}
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { closePopup(); closeDetail(); } });
+
+// Click on popup overlay to close
+document.getElementById('clickPopupOverlay').addEventListener('click', closePopup);
+
+// Click delegation for "view more" button (popup inner content is dynamic, need delegation)
+document.addEventListener('click', function(e) {
+  if (e.target.id === 'popupMoreBtn' || e.target.closest('#popupMoreBtn')) {
+    openFullDetail();
+  }
+});
+</script>
+</body>
+</html>
